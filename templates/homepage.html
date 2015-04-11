@@ -11,8 +11,20 @@
         <h1>FIND YOUR TWITTER INFLUENCERS</h1>
         <h3>akjsdnaksdnakjdnkajsdnkjadnkjasndkjan</h3>
         <br>
-        <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a>
-        <a href="/signup" class="btn btn-dark btn-lg">Sign Up</a>
+          {% if current_user.is_authenticated() %}
+           <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Current Trends</a>
+           <form class="form-search">
+            <br>
+              <input type="text" class="input-medium search-query">
+              <br><br><br>
+              <button type="submit" name="hashtag" class="btn btn-dark btn-lg" >#hashtag</button> 
+              <button type="submit" name="user" class="btn btn-dark btn-lg">@user</button>
+
+
+            </form>
+                {% else %}
+        <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a>
+         {% endif %}
     </div>
 </header>
 
