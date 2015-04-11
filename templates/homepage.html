@@ -4,35 +4,35 @@
 {%include "header.html"%}
 
 <body>
-     {% include "navbar.html" %}
-    <!-- Header -->
-    <header id="top" class="header"  background="../img/bg.jpg" >
-        <div class="text-vertical-center">
-            <h1>FIND YOUR TWITTER INFLUENCERS</h1>
-            <h3>akjsdnaksdnakjdnkajsdnkjadnkjasndkjan</h3>
-            <br>
-            <a href="#about" class="btn btn-dark btn-lg">Login</a>
-            <a href="#about" class="btn btn-dark btn-lg">Sign Up</a>
-        </div>
-    </header>
+   {% include "navbar.html" %}
+   <!-- Header -->
+   <header id="top" class="header"  background="../img/bg.jpg" >
+    <div class="text-vertical-center">
+        <h1>FIND YOUR TWITTER INFLUENCERS</h1>
+        <h3>akjsdnaksdnakjdnkajsdnkjadnkjasndkjan</h3>
+        <br>
+        <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a>
+        <a href="/signup" class="btn btn-dark btn-lg">Sign Up</a>
+    </div>
+</header>
 
-    <!-- About -->
-    <section id="about" class="about">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <h2>About us</h2>
-                    <p>Jessica Fan <br>
-                        Piyali Mukherjee <br>
-                        Emily Chen
-                        </p>
-                    <p class="lead">Visit our GITHUB: <a target="_blank" href="https://github.com/six5532one/reach">REACH PROJECT ♥ ♥</a>.</p>
-                </div>
+<!-- About -->
+<section id="about" class="about">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2>About us</h2>
+                <p>Jessica Fan <br>
+                    Piyali Mukherjee <br>
+                    Emily Chen
+                </p>
+                <p class="lead">Visit our GITHUB: <a target="_blank" href="https://github.com/six5532one/reach">REACH PROJECT ♥ ♥</a>.</p>
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /.container -->
-    </section>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+</section>
 
 </body>
 
