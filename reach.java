@@ -26,6 +26,7 @@ public class Reach {
     static ConfigurationBuilder cb = new ConfigurationBuilder();
     static TwitterFactory twitter_factory;
     static Twitter twitter;
+    static String current_user = "ambient_memory";
 
     public static void main(String[] args) throws TwitterException {
             cb.setDebugEnabled(true)
@@ -38,6 +39,10 @@ public class Reach {
 
             Reach obj = new Reach();
             obj.GetUserTimeline();
+            for( String x: user_original_timeline){
+                obj.fetchUsername(x);
+            }
+            //obj.GetInfluencers();
             obj.debug_output();
     }
     
@@ -49,9 +54,9 @@ public class Reach {
              * content. Hence getUserTimeline is better and more flexible. 
              */
             
-            int tweets_per_page = 50;
+            int tweets_per_page = 5;
             int current_page = 1;
-            ResponseList<Status> statuses = twitter.getUserTimeline("banunu_dog", new Paging(current_page++, tweets_per_page));
+            ResponseList<Status> statuses = twitter.getUserTimeline(current_user, new Paging(current_page++, tweets_per_page));
             for (Status whatIsaid : statuses) { 
                 user_original_timeline.add(whatIsaid.getText());
             }
@@ -77,17 +82,19 @@ public class Reach {
            
     }
     
-    public String fetchUsername(String status){
+    public void fetchUsername(String status){
+        String influencer_username = "";
         if(status.contains("@")){
+            System.out.println("Debug: Currently processing status: "+status);
                 //This selection filters out direct mentions as well as retweets
-                String influencer_username = "";
-                for(int x = (status.indexOf('@')+1); x < status.indexOf(' '); x++){
-                    influencer_username += status.charAt(x);
+                //Too tired to debug this right now tbh
+                for(int x = status.indexOf('@'); x < status.indexOf(' '); x++){
+                    influencer_username = influencer_username + status.charAt(x);
+                    System.out.println("Debug: username construction is: "+influencer_username);
                 }
             }    
-            else if(status.contains("RT") && (status.contains("@"))){
-                    //This selection filters out retweets only
-                }
+         //return influencer_username;   
+        System.out.println("Username found in status is:"+influencer_username);
     }
     
     public void GetInfluencers() throws TwitterException{
@@ -101,8 +108,10 @@ public class Reach {
          * retweets the most and who the suer directly mentions the most.  
          */
         for(String status: user_original_timeline){
-            
+            if(status.contains("RT")){
+                //humans_retweet_me.add(fetchUsername(status));
             }
+        }
         
         
     }
@@ -111,6 +120,10 @@ public class Reach {
         System.out.println("User's timeline collected is as follows:");
         for (int count_of_statuses = 0; count_of_statuses < user_original_timeline.size(); count_of_statuses++) {
             System.out.println("Debug: " + (count_of_statuses + 1) + ": " + user_original_timeline.get(count_of_statuses));
+        }
+        System.out.println("@ambient_memory's favorite retweeters are as follows");
+        for( int x = 0; x < humans_retweet_me.size(); x++){
+            System.out.println("Debug: "+(x+1)+": "+humans_retweet_me.get(x));
         }
     }
 }
