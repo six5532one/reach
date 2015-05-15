@@ -6,11 +6,24 @@ from oauth import OAuthSignIn
 from flask.ext.login import LoginManager, UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.socketio import SocketIO, emit
+import boto.sqs
 
 app = Flask(__name__)
 
 socketio = SocketIO(app)
 db = SQLAlchemy(app)
+
+with open("config") as f:
+    content = f.readlines()
+consumer_key = content[0].rstrip()
+consumer_secret = content[1].rstrip()
+access_token = content[2].rstrip()
+access_token_secret = content[3].rstrip()
+aws_access= content[4].rstrip()
+aws_secret = content[5].rstrip()
+
+conn = boto.ec2.connect_to_region("us-east-1", aws_access_key_id='<aws access key>', aws_secret_access_key='<aws secret key')
+
 
 app.config['SECRET_KEY'] = 'top secret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -106,7 +119,17 @@ def signup():
 def login():
     return render_template('login.html')
 
+def start_stream():
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
+    auth.set_access_token(access_token, access_token_secret)
+    l = StdOutListener()
+    stream = tweepy.Stream(auth, l)
+    stream.filter(locations=[-179.9,-89.9,179.9,89.9])
 
+
+def runThread():
+    tweetstream = threading.Thread(target=start_stream)
+    tweetstream.start()
 
 if __name__ == '__main__':
 	db.create_all()
