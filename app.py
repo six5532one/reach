@@ -5,10 +5,11 @@ from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, cu
 from oauth import OAuthSignIn
 from flask.ext.login import LoginManager, UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.socketio import SocketIO, emit
 
 app = Flask(__name__)
 
-
+socketio = SocketIO(app)
 db = SQLAlchemy(app)
 
 app.config['SECRET_KEY'] = 'top secret!'
@@ -74,6 +75,16 @@ def logout():
 def load_user(id):
     return User.query.get(int(id))
 
+@app.route('/hashtagtrend', methods = ['POST'])
+def hashtagtrends():
+    keyword = request.form['keyword']
+    print keyword
+    #db= []
+    #db.append([lat, lng, timebucket])
+    #return render_template('hashtagtrend.html', db=db)
+    return render_template('hashtagtrend.html')
+
+
 @app.route('/currenttrends')
 def currenttrends():
     return render_template('currenttrends.html')
@@ -99,5 +110,6 @@ def login():
 
 if __name__ == '__main__':
 	db.create_all()
-	app.run(debug=True)
+    app.before_first_request(runThread)
+	socketio.run(app, host='0.0.0.0', port=5004)
 
