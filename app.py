@@ -95,6 +95,8 @@ def hashtagtrends():
     #db= []
     #db.append([lat, lng, timebucket])
     #return render_template('hashtagtrend.html', db=db)
+    # TODO send `keyword` to template so client can
+    # register an event handler for that specific keyword
     return render_template('hashtagtrend.html')
 
 
@@ -119,6 +121,7 @@ def signup():
 def login():
     return render_template('login.html')
 
+<<<<<<< HEAD
 def start_stream():
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
     auth.set_access_token(access_token, access_token_secret)
@@ -126,13 +129,40 @@ def start_stream():
     stream = tweepy.Stream(auth, l)
     stream.filter(locations=[-179.9,-89.9,179.9,89.9])
 
+=======
+def enqueue_tweets():
+    # enqueue all tweets
+    pass
+
+def dequeue_tweets():
+    # TODO enclose in while loop
+    # pick up message from SQS
+    hashtags = []
+    # extract any hashtags from tweet text
+    for word in [tweettext].split(" "):
+        if word.startswith("#"):
+            hashtags.append(word)
+    for each hashtag:
+        geodata = {'lat': tweet.lat, 'lng': tweet.lng}
+        socketio.emit(hashtag, geodata)
+
+def runThreads():
+    # run thread to listen to Twitter Streaming API
+    enqueue_worker = threading.Thread(target=enqueue_tweets)
+    enqueue_worker.start()
+    # TODO change to higher number later
+    num_sqs_consumers = 2
+    for cons in range(num_sqs_consumers):
+        dequeue_worker = threading.Thread(target=dequeue_tweets)
+        dequeue_worker.start()
+>>>>>>> fd7f0f2914779b391fd06fc23ba96279cacf0ff8
 
 def runThread():
     tweetstream = threading.Thread(target=start_stream)
     tweetstream.start()
 
 if __name__ == '__main__':
-	db.create_all()
-    app.before_first_request(runThread)
+	db.create_all() 
+    app.before_first_request(runThreads)
 	socketio.run(app, host='0.0.0.0', port=5004)
 
