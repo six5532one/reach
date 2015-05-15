@@ -7,6 +7,7 @@ from flask.ext.login import LoginManager, UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.socketio import SocketIO, emit
 import boto.sqs
+from boto.sqs.message import Message
 
 app = Flask(__name__)
 
@@ -22,7 +23,9 @@ access_token_secret = content[3].rstrip()
 aws_access= content[4].rstrip()
 aws_secret = content[5].rstrip()
 
-conn = boto.ec2.connect_to_region("us-east-1", aws_access_key_id='<aws access key>', aws_secret_access_key='<aws secret key')
+conn = boto.ec2.connect_to_region("us-east-1", aws_access_key_id=aws_access, aws_secret_access_key=aws_secret)
+
+queue_sns = conn.create_queue('Reachv1')
 
 
 app.config['SECRET_KEY'] = 'top secret!'
@@ -121,30 +124,62 @@ def signup():
 def login():
     return render_template('login.html')
 
-<<<<<<< HEAD
-def start_stream():
+
+class StdOutListener(tweepy.StreamListener,):
+
+    def __init__(self):
+        self.max=100000
+
+    def on_data(self, data):
+        decoded = json.loads(data)
+        if 'user' in decoded:
+            user = decoded['user']['screen_name']
+            text = decoded['text'].encode('ascii', 'ignore')
+            if decoded["geo"] == None:
+                pass
+            else:
+                geolocation = decoded['geo']['coordinates']
+                tweet_id = decoded['id_str'].encode('ascii')
+                location = decoded['user']['location']
+                lat= geolocation[0]
+                lng = geolocation[1]
+
+                #put into Queue
+                cnx = mysql.connector.connect(**config)
+                cursor = cnx.cursor()
+                test = ("INSERT INTO tweet "
+                    "(keyword, lat, lng, tweet, tweet_id) "
+                    "VALUES (%s, %s, %s, %s, %s)")
+            
+                data_one = (user,lat,lng,text,tweet_id)
+                cursor.execute(test, data_one)
+                cnx.commit()
+                cursor.close()
+        return True
+
+    def on_error(self, status):
+        print status
+
+
+def enqueue_tweets():
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
     auth.set_access_token(access_token, access_token_secret)
     l = StdOutListener()
     stream = tweepy.Stream(auth, l)
     stream.filter(locations=[-179.9,-89.9,179.9,89.9])
 
-=======
-def enqueue_tweets():
-    # enqueue all tweets
-    pass
-
 def dequeue_tweets():
     # TODO enclose in while loop
     # pick up message from SQS
-    hashtags = []
-    # extract any hashtags from tweet text
-    for word in [tweettext].split(" "):
-        if word.startswith("#"):
-            hashtags.append(word)
-    for each hashtag:
-        geodata = {'lat': tweet.lat, 'lng': tweet.lng}
-        socketio.emit(hashtag, geodata)
+    while True: 
+        hashtags = []
+        # extract any hashtags from tweet text
+        for word in [tweettext].split(" "):
+            if word.startswith("#"):
+                hashtags.append(word)
+        for each hashtag:
+            geodata = {'lat': tweet.lat, 'lng': tweet.lng}
+            socketio.emit(hashtag, geodata)
 
 def runThreads():
     # run thread to listen to Twitter Streaming API
@@ -155,8 +190,6 @@ def runThreads():
     for cons in range(num_sqs_consumers):
         dequeue_worker = threading.Thread(target=dequeue_tweets)
         dequeue_worker.start()
->>>>>>> fd7f0f2914779b391fd06fc23ba96279cacf0ff8
-
 def runThread():
     tweetstream = threading.Thread(target=start_stream)
     tweetstream.start()
