@@ -25,7 +25,7 @@ aws_secret = content[5].rstrip()
 
 conn = boto.ec2.connect_to_region("us-east-1", aws_access_key_id=aws_access, aws_secret_access_key=aws_secret)
 
-queue_sns = conn.create_queue('Reachv1')
+reachqueue = conn.create_queue('Reachv1')
 
 
 app.config['SECRET_KEY'] = 'top secret!'
@@ -148,15 +148,12 @@ class StdOutListener(tweepy.StreamListener,):
                 m = Message()
                 body=str(lat) + "|" + str(lng) + "|" + str(text)
                 m.set_body(body)
-                queue_sns.write(m)
+                reachqueue.write(m)
                 print "DEBUG_____SQS" 
-
                 print conn.get_all_queues()
-                l = queue_sns.get_messages(1)
+                l = reachqueue.get_messages(1)
                 print l
                 print len(l)
-                
-
                 
         return True
 
@@ -175,14 +172,26 @@ def dequeue_tweets():
     # TODO enclose in while loop
     # pick up message from SQS
     while True: 
-        hashtags = []
-        # extract any hashtags from tweet text
-        for word in [tweettext].split(" "):
-            if word.startswith("#"):
-                hashtags.append(word)
-        for each hashtag:
-            geodata = {'lat': tweet.lat, 'lng': tweet.lng}
-            socketio.emit(hashtag, geodata)
+        #pick up message from queue
+        msg = queue_sns.get_messages()
+        #only compute if queue is not empty 
+        while len(msg) > 0:
+            msg_body = msg[0].get_body()
+            #after we get the body, delete the message
+            reachqueue.delete_message(msg[0])
+            #body looks like: lng|lat|text
+            tweet_arr = msg_body.split("|")
+            lat = tweet_arr[0]
+            lng = tweet_arr[1]
+            tweettext = tweet_arr[2]
+            hashtags = []
+            # extract any hashtags from tweet text
+            for word in [tweettext].split(" "):
+                if word.startswith("#"):
+                    hashtags.append(word)
+            for each hashtag:
+                geodata = {'lat': tweet.lat, 'lng': tweet.lng}
+                socketio.emit(hashtag, geodata)
 
 def runThreads():
     # run thread to listen to Twitter Streaming API
