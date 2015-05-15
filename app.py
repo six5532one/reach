@@ -80,7 +80,6 @@ def oauth_callback(provider):
 def oauth_authorize(provider):	
     if not current_user.is_anonymous():
         return redirect(url_for('currenttrends'))
-    print "test1"
     oauth = OAuthSignIn.get_provider(provider)
     return oauth.authorize()
 
@@ -97,13 +96,13 @@ def load_user(id):
 @app.route('/hashtagtrend', methods = ['POST'])
 def hashtagtrends():
     keyword = request.form['keyword']
-    print keyword
+    keyword = keyword.lower()
     #db= []
     #db.append([lat, lng, timebucket])
     #return render_template('hashtagtrend.html', db=db)
     # TODO send `keyword` to template so client can
     # register an event handler for that specific keyword
-    return render_template('hashtagtrend.html')
+    return render_template('hashtagtrend.html', keyword=keyword)
 
 
 @app.route('/currenttrends')
@@ -169,7 +168,6 @@ def dequeue_tweets():
     # TODO enclose in while loop
     # pick up message from SQS
     while True: 
-        print "______DEQUEUE DEBBUG ________"
         #pick up message from queue
         msg = reachqueue.get_messages()
         #only compute if queue is not empty 
@@ -188,16 +186,19 @@ def dequeue_tweets():
             for word in tweettext.split(" "):
                 if word.startswith("#"):
                     hashtag_list.append(word)
-            if len(hashtag_list) > 0:
-                print hashtag_list 
-                print lat + " | " + lng
             for n in hashtag_list:
                 geodata = {'lat': lat, 'lng': lng}
-                socketio.emit(n, geodata)
+                n = n.lower()
+                n = n.replace("#","")
+                n = "cats"
+                socketio.emit(n, geodata, namespace = '/test')
             msg = reachqueue.get_messages()
 
+@socketio.on('my event', namespace='/test')
+def test_message(message):
+    session['recieve_count'] = session.get('receive_count', 0) + 1
+
 def runThreads():
-    print "runnign threads"
     # run thread to listen to Twitter Streaming API
     enqueue_worker = threading.Thread(target=enqueue_tweets)
     enqueue_worker.start()
