@@ -145,16 +145,19 @@ class StdOutListener(tweepy.StreamListener,):
                 lng = geolocation[1]
 
                 #put into Queue
-                cnx = mysql.connector.connect(**config)
-                cursor = cnx.cursor()
-                test = ("INSERT INTO tweet "
-                    "(keyword, lat, lng, tweet, tweet_id) "
-                    "VALUES (%s, %s, %s, %s, %s)")
-            
-                data_one = (user,lat,lng,text,tweet_id)
-                cursor.execute(test, data_one)
-                cnx.commit()
-                cursor.close()
+                m = Message()
+                body=str(lat) + "|" + str(lng) + "|" + str(text)
+                m.set_body(body)
+                queue_sns.write(m)
+                print "DEBUG_____SQS" 
+
+                print conn.get_all_queues()
+                l = queue_sns.get_messages(1)
+                print l
+                print len(l)
+                
+
+                
         return True
 
     def on_error(self, status):
