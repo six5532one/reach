@@ -152,12 +152,6 @@ class StdOutListener(tweepy.StreamListener,):
                 body=str(lat) + "|" + str(lng) + "|" + str(text)
                 m.set_body(body)
                 reachqueue.write(m)
-                print "DEBUG_____SQS: inserting into queue: " + str(body)
-                print conn.get_all_queues()
-                l = reachqueue.get_messages()
-                print l[0].get_body()
-                print len(l)
-                
         return True
 
     def on_error(self, status):
@@ -175,8 +169,9 @@ def dequeue_tweets():
     # TODO enclose in while loop
     # pick up message from SQS
     while True: 
+        print "______DEQUEUE DEBBUG ________"
         #pick up message from queue
-        msg = queue_sns.get_messages()
+        msg = reachqueue.get_messages()
         #only compute if queue is not empty 
         while len(msg) > 0:
             msg_body = msg[0].get_body()
@@ -187,16 +182,22 @@ def dequeue_tweets():
             lat = tweet_arr[0]
             lng = tweet_arr[1]
             tweettext = tweet_arr[2]
-            hashtags_list = []
+            #print "This is the tweettext:  " + str(tweettext)
+            hashtag_list = []
             # extract any hashtags from tweet text
-            for word in [tweettext].split(" "):
+            for word in tweettext.split(" "):
                 if word.startswith("#"):
-                    hashtags.append(word)
-            for hashtag in hashtag_list:
+                    hashtag_list.append(word)
+            if len(hashtag_list) > 0:
+                print hashtag_list 
+                print lat + " | " + lng
+            for n in hashtag_list:
                 geodata = {'lat': lat, 'lng': lng}
-                socketio.emit(hashtag, geodata)
+                socketio.emit(n, geodata)
+            msg = reachqueue.get_messages()
 
 def runThreads():
+    print "runnign threads"
     # run thread to listen to Twitter Streaming API
     enqueue_worker = threading.Thread(target=enqueue_tweets)
     enqueue_worker.start()
@@ -209,6 +210,6 @@ def runThreads():
 if __name__ == '__main__':
     db.create_all() 
     app.before_first_request(runThreads)
-    app.debug =True 
+    print "debug 1"
     socketio.run(app)
 
