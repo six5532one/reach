@@ -7,6 +7,9 @@ from flask.ext.login import LoginManager, UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.socketio import SocketIO, emit
 import boto.sqs
+import tweepy
+import threading 
+from threading import Thread
 from boto.sqs.message import Message
 
 app = Flask(__name__)
@@ -23,7 +26,7 @@ access_token_secret = content[3].rstrip()
 aws_access= content[4].rstrip()
 aws_secret = content[5].rstrip()
 
-conn = boto.ec2.connect_to_region("us-east-1", aws_access_key_id=aws_access, aws_secret_access_key=aws_secret)
+conn = boto.sqs.connect_to_region("us-east-1", aws_access_key_id=aws_access, aws_secret_access_key=aws_secret)
 
 reachqueue = conn.create_queue('Reachv1')
 
@@ -149,10 +152,10 @@ class StdOutListener(tweepy.StreamListener,):
                 body=str(lat) + "|" + str(lng) + "|" + str(text)
                 m.set_body(body)
                 reachqueue.write(m)
-                print "DEBUG_____SQS" 
+                print "DEBUG_____SQS: inserting into queue: " + str(body)
                 print conn.get_all_queues()
-                l = reachqueue.get_messages(1)
-                print l
+                l = reachqueue.get_messages()
+                print l[0].get_body()
                 print len(l)
                 
         return True
@@ -184,13 +187,13 @@ def dequeue_tweets():
             lat = tweet_arr[0]
             lng = tweet_arr[1]
             tweettext = tweet_arr[2]
-            hashtags = []
+            hashtags_list = []
             # extract any hashtags from tweet text
             for word in [tweettext].split(" "):
                 if word.startswith("#"):
                     hashtags.append(word)
-            for each hashtag:
-                geodata = {'lat': tweet.lat, 'lng': tweet.lng}
+            for hashtag in hashtag_list:
+                geodata = {'lat': lat, 'lng': lng}
                 socketio.emit(hashtag, geodata)
 
 def runThreads():
@@ -202,12 +205,10 @@ def runThreads():
     for cons in range(num_sqs_consumers):
         dequeue_worker = threading.Thread(target=dequeue_tweets)
         dequeue_worker.start()
-def runThread():
-    tweetstream = threading.Thread(target=start_stream)
-    tweetstream.start()
 
 if __name__ == '__main__':
-	db.create_all() 
+    db.create_all() 
     app.before_first_request(runThreads)
-	socketio.run(app, host='0.0.0.0', port=5004)
+    app.debug =True 
+    socketio.run(app)
 
