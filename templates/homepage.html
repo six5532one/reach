@@ -1,50 +1,58 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 {%include "header.html"%}
 
 <body>
-   {% include "navbar.html" %}
-   <!-- Header -->
-   <header id="top" class="header"  background="../img/bg.jpg" >
-    <div class="text-vertical-center">
-        <h1>FIND YOUR TWITTER INFLUENCERS</h1>
-        <h3>akjsdnaksdnakjdnkajsdnkjadnkjasndkjan</h3>
-        <br>
-          {% if current_user.is_authenticated() %}
-           <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Current Trends</a>
-           <form class="form-search">
-            <br>
-              <input type="text" class="input-medium search-query">
-              <br><br><br>
-              <button type="submit" name="hashtag" class="btn btn-dark btn-lg" >#hashtag</button> 
-              <button type="submit" name="user" class="btn btn-dark btn-lg">@user</button>
-
+    {% include "navbar.html" %}
+    <!-- Header -->
+    <header id="top" class="header" background="../img/bg.jpg">
+        <div class="text-vertical-center">
+            <h1>FIND YOUR TWITTER INFLUENCERS</h1>
+            <h3>akjsdnaksdnakjdnkajsdnkjadnkjasndkjan</h3>
+            <br> {% if current_user.is_authenticated() %}
+            <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Current Trends</a>
+            <form class="form-search" action="\hashtagtrend" method="post">
+                <br>
+                <input type="text" name="keyword" class="input-medium search-query">
+                <br>
+                <br>
+                <br>
+                <button type="submit" name="hashtag" class="btn btn-dark btn-lg">#hashtag</button>
 
             </form>
-                {% else %}
-        <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a>
-         {% endif %}
-    </div>
-</header>
+            <form class="form-search" action="\useranalytics" method="post">
+                <br>
+                <input type="text" name="keyword" class="input-medium search-query">
+                <br>
+                <br>
+                <br>
 
-<!-- About -->
-<section id="about" class="about">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <h2>About us</h2>
-                <p>Jessica Fan <br>
-                    Piyali Mukherjee <br>
-                    Emily Chen
-                </p>
-                <p class="lead">Visit our GITHUB: <a target="_blank" href="https://github.com/six5532one/reach">REACH PROJECT ♥ ♥</a>.</p>
-            </div>
+                <button type="submit" name="user" class="btn btn-dark btn-lg">@user</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> {% endif %}
         </div>
-        <!-- /.row -->
-    </div>
-    <!-- /.container -->
-</section>
+    </header>
+
+    <!-- About -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2>About us</h2>
+                    <p>Jessica Fan
+                        <br> Piyali Mukherjee
+                        <br> Emily Chen
+                    </p>
+                    <p class="lead">Visit our GITHUB: <a target="_blank" href="https://github.com/six5532one/reach">REACH PROJECT ♥ ♥</a>.</p>
+                </div>
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container -->
+    </section>
 
 </body>
 
