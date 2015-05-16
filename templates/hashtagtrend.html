@@ -91,7 +91,19 @@
             var lng = msg.lng
             console.log(lat)
             console.log(lng)
-
+            var point = new google.maps.LatLng(lat, lng)
+             var populationOptions = {
+                  strokeColor: '#FF0000',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
+                  fillColor: '#FF0000',
+                  fillOpacity: 0.35,
+                  center: point
+                  map: map,
+                  radius: 100
+              };
+              // Add the circle for this city to the map.
+              cityCircle = new google.maps.Circle(populationOptions);
         });
 
     });
