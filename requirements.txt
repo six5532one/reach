@@ -1,0 +1,6 @@
+boto
+tweepy
+flask_socketio
+flask_sqlalchemy
+flask_login
+rauth
