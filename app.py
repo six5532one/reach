@@ -3,7 +3,6 @@ import json
 from rauth import OAuth2Service
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from oauth import OAuthSignIn
-from flask.ext.login import LoginManager, UserMixin
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.socketio import SocketIO, emit
 import boto.sqs
@@ -190,7 +189,6 @@ def dequeue_tweets():
                 geodata = {'lat': lat, 'lng': lng}
                 n = n.lower()
                 n = n.replace("#","")
-                n = "cats"
                 socketio.emit(n, geodata, namespace = '/test')
             msg = reachqueue.get_messages()
 
