@@ -151,7 +151,7 @@ class StdOutListener(tweepy.StreamListener,):
             hashtags = decoded['entities']['hashtags']
             if (lat is not None) and (lng is not None) and (len(hashtags) > 0):
                 # enqueue 
-                tags = "#".join([htag['text'].encode('ascii', 'ignore') for htag in hashtags])
+                tags = "#".join([htag['text'].encode('utf-8', 'ignore') for htag in hashtags])
                 m = Message()
                 body = str(lat) + "|" + str(lng) + "|" + tags
                 m.set_body(body)
