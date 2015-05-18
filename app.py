@@ -133,21 +133,27 @@ class StdOutListener(tweepy.StreamListener,):
 
     def on_data(self, data):
         decoded = json.loads(data)
+        lat = None
+        lng = None
         if 'user' in decoded:
-            user = decoded['user']['screen_name']
-            text = decoded['text'].encode('ascii', 'ignore')
-            if decoded["geo"] == None:
-                pass
+            if decoded["coordinates"] is None:
+                #print "no coordinates"
+                if decoded['place'] is None:
+                    print "no place"
+                else:
+                    corner = decoded['place']['bounding_box']['coordinates'][0][0]
+                    lat = corner[1]
+                    lng = corner[0]
             else:
-                geolocation = decoded['geo']['coordinates']
-                tweet_id = decoded['id_str'].encode('ascii')
-                location = decoded['user']['location']
-                lat= geolocation[0]
-                lng = geolocation[1]
-
-                #put into Queue
+                lat= decoded['coordinates']['coordinates'][1]
+                lng = decoded['coordinates']['coordinates'][0]
+            #print "lat: {lt}, lng: {lg}".format(lt=lat,lg=lng)
+            hashtags = decoded['entities']['hashtags']
+            if (lat is not None) and (lng is not None) and (len(hashtags) > 0):
+                # enqueue 
+                tags = "#".join([htag['text'].encode('ascii', 'ignore') for htag in hashtags])
                 m = Message()
-                body=str(lat) + "|" + str(lng) + "|" + str(text)
+                body = str(lat) + "|" + str(lng) + "|" + tags
                 m.set_body(body)
                 reachqueue.write(m)
         return True
@@ -164,12 +170,9 @@ def enqueue_tweets():
     stream.filter(locations=[-179.9,-89.9,179.9,89.9])
 
 def dequeue_tweets():
-    # TODO enclose in while loop
-    # pick up message from SQS
     while True: 
-        #pick up message from queue
+        # dequeue
         msg = reachqueue.get_messages()
-        #only compute if queue is not empty 
         while len(msg) > 0:
             msg_body = msg[0].get_body()
             #after we get the body, delete the message
@@ -178,18 +181,11 @@ def dequeue_tweets():
             tweet_arr = msg_body.split("|")
             lat = tweet_arr[0]
             lng = tweet_arr[1]
-            tweettext = tweet_arr[2]
-            #print "This is the tweettext:  " + str(tweettext)
-            hashtag_list = []
-            # extract any hashtags from tweet text
-            for word in tweettext.split(" "):
-                if word.startswith("#"):
-                    hashtag_list.append(word)
-            for n in hashtag_list:
+            tags = tweet_arr[2]
+            hashtags = tags.split('#') 
+            for htag in hashtags:
                 geodata = {'lat': lat, 'lng': lng}
-                n = n.lower()
-                n = n.replace("#","")
-                socketio.emit(n, geodata, namespace = '/test')
+                socketio.emit(htag.lower(), geodata, namespace = '/test')
             msg = reachqueue.get_messages()
 
 @socketio.on('my event', namespace='/test')
