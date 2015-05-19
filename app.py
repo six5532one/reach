@@ -120,6 +120,9 @@ def favorites():
 def signup():
     return render_template('signup.html')
 
+@app.route('/user', methods = ['POST'])
+def user():
+    return render_template('user.html')
 
 @app.route('/login')
 def login():
@@ -127,7 +130,6 @@ def login():
 
 
 class StdOutListener(tweepy.StreamListener,):
-
     def __init__(self):
         self.max=100000
 
@@ -185,6 +187,9 @@ def dequeue_tweets():
             hashtags = tags.split('#') 
             for htag in hashtags:
                 geodata = {'lat': lat, 'lng': lng}
+                print "printing htag: "
+                print htag
+                htag = "tbt"
                 socketio.emit(htag.lower(), geodata, namespace = '/test')
             msg = reachqueue.get_messages()
 
