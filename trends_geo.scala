@@ -11,13 +11,13 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext
 import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.streaming.api.java.JavaDStream
 import org.apache.spark.streaming.api.java.JavaReceiverInputDStream
-
-
 import sqlContext._ 
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.{StructType,StructField,StringType,DoubleType,TimestampType};
 
+// mount S3 bucket to Databricks Cloud FS
 val MountName = "learningscala"
+
 // Twitter credentials
 val consumerKey = ""
 val consumerSecret = ""
@@ -37,6 +37,7 @@ val a = new twitter4j.auth.OAuthAuthorization(auth.config)
 val atwitter : Option[twitter4j.auth.Authorization] =  Some(twitter_auth.getInstance(a).getAuthorization())
 
 val ssc = new StreamingContext(sc, Seconds(120))
+
 // Create a input stream that returns tweets received from Twitter.
 // filter for tweets that have at least one hashtag
 val tweets = TwitterUtils.createStream(ssc, atwitter).filter(status => (status.getPlace() != null)).map((status:Status) => {
@@ -54,12 +55,6 @@ val tweets = TwitterUtils.createStream(ssc, atwitter).filter(status => (status.g
   }
   (htags, date, lat, lng)
 }).filter(fields => (fields._1.length > 0))
-
-// Create distributed map to associate each hashtag with the time it was first encountered
-val rdd = sc.parallelize(Seq("ec2805")).map(x => (x.hashCode.toLong, new java.util.Date()))
-// Construct an IndexedRDD from the pairs, hash-partitioning and indexing
-// the entries.
-var indexed = IndexedRDD(rdd).cache()
 
 val withSingleHashtags = tweets.map((fields:(List[String], java.util.Date, Double, Double)) => {
   val hashtags = fields._1
