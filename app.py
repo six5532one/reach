@@ -125,17 +125,25 @@ def user():
     print "here?"
     #getting stuff about user bc i am a STALKER~
     user_handle = request.form['user_handle']
-    print user_handle
     user_handle = user_handle.lower()
-    print user_handle
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
+    auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
     user = api.get_user(user_handle)
-    print user
+    
     short = user.profile_image_url
-    print short
+    description = user.description
+    followers_count = user.followers_count
+    following_count = user.friends_count
     big_url  = short.split("_normal.jpg")
     big_url = big_url[0]+"_400x400.jpg"
     print big_url
-    return render_template('user.html', big_url=big_url)
+    return render_template('user.html', 
+        big_url=big_url,
+        user_handle=user_handle, 
+        followers_count =followers_count,
+        following_count = following_count,
+        description=description)
 
 @app.route('/login')
 def login():
