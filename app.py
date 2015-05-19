@@ -122,7 +122,20 @@ def signup():
 
 @app.route('/user', methods = ['POST'])
 def user():
-    return render_template('user.html')
+    print "here?"
+    #getting stuff about user bc i am a STALKER~
+    user_handle = request.form['user_handle']
+    print user_handle
+    user_handle = user_handle.lower()
+    print user_handle
+    user = api.get_user(user_handle)
+    print user
+    short = user.profile_image_url
+    print short
+    big_url  = short.split("_normal.jpg")
+    big_url = big_url[0]+"_400x400.jpg"
+    print big_url
+    return render_template('user.html', big_url=big_url)
 
 @app.route('/login')
 def login():
@@ -167,6 +180,7 @@ class StdOutListener(tweepy.StreamListener,):
 def enqueue_tweets():
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
     auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
     l = StdOutListener()
     stream = tweepy.Stream(auth, l)
     stream.filter(locations=[-179.9,-89.9,179.9,89.9])
@@ -187,9 +201,6 @@ def dequeue_tweets():
             hashtags = tags.split('#') 
             for htag in hashtags:
                 geodata = {'lat': lat, 'lng': lng}
-                print "printing htag: "
-                print htag
-                htag = "tbt"
                 socketio.emit(htag.lower(), geodata, namespace = '/test')
             msg = reachqueue.get_messages()
 
