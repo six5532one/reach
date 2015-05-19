@@ -1,0 +1,12 @@
+{
+	"name": "Reach_backend",
+    "version": "1.0.0",
+    "description": "Reach Backend Server",
+    "dependencies": {
+		"twit": "latest",
+		"aws-sdk": "latest",
+		"request": "latest",
+		"url" : "latest"
+    },
+    "author": "Piyali Mukherjee pm2678@columbia.edu"
+}
