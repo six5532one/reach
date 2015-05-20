@@ -103,7 +103,8 @@ def hashtagtrends():
     data = [{"timebucket":int(res["timebucket"]), "lat":float(res["lat"]), "lng":float(res["lng"])} for res in list(all_results)]
     print data
     oldest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, limit=1))[0]['timebucket'])
-    return render_template('hashtagtrend.html', keyword=keyword, data=json.dumps(data), oldest_timebucket=oldest_timebucket)
+    newest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, reverse=True, limit=1))[0]['timebucket'])
+    return render_template('hashtagtrend.html', keyword=keyword, data=json.dumps(data), oldest_timebucket=oldest_timebucket, newest_timebucket=newest_timebucket)
 
 
 @app.route('/currenttrends')
@@ -197,8 +198,6 @@ def enqueue_tweets():
             stream = tweepy.Stream(auth, l)
             stream.filter(locations=[-179.9,-89.9,179.9,89.9])
         except:
-            import traceback
-            print 'Stream exception: {} trace: {}'.format(e, traceback.format_exc())
             time.sleep(120)
             continue
 
@@ -231,8 +230,9 @@ def process_spark_output():
     s3conn = boto.connect_s3()
     while True:
         # dequeue
-        if len(spark_notifications.get_messages()) > 0:
-            msg = spark_notifications.get_messages()[0]
+        fetched_messages = spark_notifications.get_messages()
+        if len(fetched_messages) > 0:
+            msg = fetched_messages[0]
             notification = json.loads(msg.get_body().encode("utf-8"))
             spark_notifications.delete_message(msg)
             bucket_name = notification['Records'][0]['s3']['bucket']['name']
