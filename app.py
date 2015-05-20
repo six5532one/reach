@@ -1,3 +1,4 @@
+import time
 import boto.sqs
 import tweepy
 import threading
@@ -97,12 +98,12 @@ def load_user(id):
 def hashtagtrends():
     keyword = request.form['keyword']
     keyword = keyword.lower()
-    #db= []
-    #db.append([lat, lng, timebucket])
-    #return render_template('hashtagtrend.html', db=db)
-    # TODO send `keyword` to template so client can
-    # register an event handler for that specific keyword
-    return render_template('hashtagtrend.html', keyword=keyword)
+    trend_timebucket_table = Table('trend_geo')
+    all_results = trend_timebucket_table.query_2(hashtag__eq=keyword)
+    data = [{"timebucket":int(res["timebucket"]), "lat":float(res["lat"]), "lng":float(res["lng"])} for res in list(all_results)]
+    print data
+    oldest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, limit=1))[0]['timebucket'])
+    return render_template('hashtagtrend.html', keyword=keyword, data=json.dumps(data), oldest_timebucket=oldest_timebucket)
 
 
 @app.route('/currenttrends')
@@ -195,7 +196,7 @@ def enqueue_tweets():
         try:
             stream = tweepy.Stream(auth, l)
             stream.filter(locations=[-179.9,-89.9,179.9,89.9])
-        except Exception, e:
+        except:
             import traceback
             print 'Stream exception: {} trace: {}'.format(e, traceback.format_exc())
             time.sleep(120)
@@ -230,43 +231,48 @@ def process_spark_output():
     s3conn = boto.connect_s3()
     while True:
         # dequeue
-        notification = json.loads(spark_notifications.get_messages()[0].get_body().encode("utf-8"))
-        bucket_name = notification['Records'][0]['s3']['bucket']['name']
-        object_name = notification['Records'][0]['s3']['object']['key'] 
-        if "SUCCESS" in object_name:
-            continue
+        if len(spark_notifications.get_messages()) > 0:
+            msg = spark_notifications.get_messages()[0]
+            notification = json.loads(msg.get_body().encode("utf-8"))
+            spark_notifications.delete_message(msg)
+            bucket_name = notification['Records'][0]['s3']['bucket']['name']
+            object_name = notification['Records'][0]['s3']['object']['key'] 
+            if "SUCCESS" in object_name:
+                continue
+            else:
+                # extract timebucket from object name
+                timebucket = int(object_name.split(".")[0][1:-3])
+                # read contents of S3 object
+                bucket = s3conn.get_bucket(bucket_name)
+                s3_object = bucket.get_key(object_name)
+                events = [s.strip() for s in s3_object.get_contents_as_string().split(")))") if s.strip()]
+                for event in events:
+                    tmp = event.split(",ArrayBuffer")
+                    hashtag = tmp[0][1:].lower()
+                    parse_for_entries = tmp[1].split("UTC 2015")
+                    for entry in parse_for_entries:
+                        if "," in entry:
+                            lat = entry.split(",")[1].replace("(","").replace(")","")
+                            lng = entry.split(",")[2].replace("(","").replace(")","")
+                    """
+                    print "hashtag: {}".format(hashtag)
+                    print "timebucket: {}".format(timebucket)
+                    print "lat: {}".format(lat)
+                    print "lng: {}".format(lng)
+                    """
+                    if (hashtag and timebucket and lat and lng):
+                        item = {'hashtag': hashtag,
+                            'timebucket': timebucket,
+                            'lat': lat,
+                            'lng': lng}
+                        try:
+                            trend_timebucket_table.put_item(data=item)
+                        except Exception as inst:
+                            print inst.args
+                        except:
+                            print "Unexpected error:", sys.exc_info()[0]
         else:
-            # extract timebucket from object name
-            timebucket = int(object_name.split(".")[0][1:-3])
-            # read contents of S3 object
-            bucket = s3conn.get_bucket(bucket_name)
-            s3_object = bucket.get_key(object_name)
-            events = [s.strip() for s in s3_object.get_contents_as_string().split(")))") if s.strip()]
-            for event in events:
-                tmp = event.split(",ArrayBuffer")
-                hashtag = tmp[0][1:]
-                parse_for_entries = tmp[1].split("UTC 2015")
-                for entry in parse_for_entries:
-                    if "," in entry:
-                        lat = entry.split(",")[1].replace("(","").replace(")","")
-                        lng = entry.split(",")[2].replace("(","").replace(")","")
-                """
-                print "hashtag: {}".format(hashtag)
-                print "timebucket: {}".format(timebucket)
-                print "lat: {}".format(lat)
-                print "lng: {}".format(lng)
-                """
-                if (hashtag and timebucket and lat and lng):
-                    item = {'hashtag': hashtag,
-                        'timebucket': timebucket,
-                        'lat': lat,
-                        'lng': lng}
-                    try:
-                        trend_timebucket_table.put_item(data=item)
-                    except Exception as inst:
-                        print inst.args
-                    except:
-                        print "Unexpected error:", sys.exc_info()[0]
+            time.sleep(300)
 
 def runThreads():
     # run thread to listen to Twitter Streaming API
@@ -274,8 +280,7 @@ def runThreads():
     spark_output_processor.start()
     enqueue_worker = threading.Thread(target=enqueue_tweets)
     enqueue_worker.start()
-    # TODO change to higher number later
-    num_sqs_consumers = 2
+    num_sqs_consumers = 6
     for cons in range(num_sqs_consumers):
         dequeue_worker = threading.Thread(target=dequeue_tweets)
         dequeue_worker.start()

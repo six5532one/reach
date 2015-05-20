@@ -42,8 +42,10 @@
     function initialize()   {
         console.log("initialize called"); 
         console.log('{{keyword}}');
-        console.log("citymap");
-        console.log(citymap);
+        var data = JSON.parse({{data|tojson}});
+        var oldestTimebucket = Number('{{oldest_timebucket}}');
+        console.log(oldestTimebucket);
+        
         var mapOptions = {
             zoom: 4,
             center: new google.maps.LatLng(37.09024, -95.712891),
@@ -52,6 +54,7 @@
         var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         // Construct the circle for each value in citymap.
         // Note: We scale the area of the circle based on the population.
+        /*
         for (var city in citymap)
         {
             var populationOptions = {
@@ -66,6 +69,13 @@
             };
             // Add the circle for this city to the map.
             cityCircle = new google.maps.Circle(populationOptions);
+        }
+        */
+        for (var i=0;i<data.length;i++) {
+            console.log(typeof data[i].lat)
+            console.log(data[i].lat)
+            console.log(typeof data[i].timebucket)
+            console.log(data[i].timebucket)
         }
         var namespace = '/test'; // change to an empty string to use the global namespace
         // the socket.io documentation recommends sending an explicit package upon connection
