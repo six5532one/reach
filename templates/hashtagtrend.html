@@ -37,7 +37,7 @@
         population: 603502
     };
 
-    var cityCircle;
+    var dot;
 
     function initialize()   {
         console.log("initialize called"); 
@@ -47,35 +47,27 @@
         console.log(oldestTimebucket);
         
         var mapOptions = {
-            zoom: 4,
+            zoom: 2,
             center: new google.maps.LatLng(37.09024, -95.712891),
             mapTypeId: google.maps.MapTypeId.TERRAIN
         };
         var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-        // Construct the circle for each value in citymap.
-        // Note: We scale the area of the circle based on the population.
-        /*
-        for (var city in citymap)
-        {
-            var populationOptions = {
+        var dotColors = []
+        // plot geo coordinates of previously recorded statuses mentioning this trend
+        for (var i=0;i<data.length;i++) {
+            //TODO use timebucket to assign color
+            var dotOptions = {
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
                 fillColor: '#FF0000',
                 fillOpacity: 0.35,
                 map: map,
-                center: citymap[city].center,
-                radius: Math.sqrt(citymap[city].population) * 100
+                center: new google.maps.LatLng(data[i].lat, data[i].lng),
+                radius: 50000
             };
             // Add the circle for this city to the map.
-            cityCircle = new google.maps.Circle(populationOptions);
-        }
-        */
-        for (var i=0;i<data.length;i++) {
-            console.log(typeof data[i].lat)
-            console.log(data[i].lat)
-            console.log(typeof data[i].timebucket)
-            console.log(data[i].timebucket)
+            dot = new google.maps.Circle(dotOptions);
         }
         var namespace = '/test'; // change to an empty string to use the global namespace
         // the socket.io documentation recommends sending an explicit package upon connection
