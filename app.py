@@ -1,15 +1,17 @@
-from flask import Flask, render_template, request, redirect, g, url_for
+import boto.sqs
+import tweepy
+import threading
 import json
+
 from rauth import OAuth2Service
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from oauth import OAuthSignIn
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.socketio import SocketIO, emit
-import boto.sqs
-import tweepy
-import threading 
+from flask import Flask, render_template, request, redirect, g, url_for
 from threading import Thread
 from boto.sqs.message import Message
+from boto.dynamodb2.table import Table
 
 app = Flask(__name__)
 
@@ -26,9 +28,8 @@ aws_access= content[4].rstrip()
 aws_secret = content[5].rstrip()
 
 conn = boto.sqs.connect_to_region("us-east-1", aws_access_key_id=aws_access, aws_secret_access_key=aws_secret)
-
 reachqueue = conn.create_queue('Reachv1')
-
+spark_notifications = conn.get_queue('spark_output_events')
 
 app.config['SECRET_KEY'] = 'top secret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -120,6 +121,30 @@ def favorites():
 def signup():
     return render_template('signup.html')
 
+@app.route('/user', methods = ['POST'])
+def user():
+    print "here?"
+    #getting stuff about user bc i am a STALKER~
+    user_handle = request.form['user_handle']
+    user_handle = user_handle.lower()
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
+    auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
+    user = api.get_user(user_handle)
+    
+    short = user.profile_image_url
+    description = user.description
+    followers_count = user.followers_count
+    following_count = user.friends_count
+    big_url  = short.split("_normal.jpg")
+    big_url = big_url[0]+"_400x400.jpg"
+    print big_url
+    return render_template('user.html', 
+        big_url=big_url,
+        user_handle=user_handle, 
+        followers_count =followers_count,
+        following_count = following_count,
+        description=description)
 
 @app.route('/login')
 def login():
@@ -127,7 +152,6 @@ def login():
 
 
 class StdOutListener(tweepy.StreamListener,):
-
     def __init__(self):
         self.max=100000
 
@@ -165,9 +189,17 @@ class StdOutListener(tweepy.StreamListener,):
 def enqueue_tweets():
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
     auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
     l = StdOutListener()
-    stream = tweepy.Stream(auth, l)
-    stream.filter(locations=[-179.9,-89.9,179.9,89.9])
+    while True:
+        try:
+            stream = tweepy.Stream(auth, l)
+            stream.filter(locations=[-179.9,-89.9,179.9,89.9])
+        except Exception, e:
+            import traceback
+            print 'Stream exception: {} trace: {}'.format(e, traceback.format_exc())
+            time.sleep(120)
+            continue
 
 def dequeue_tweets():
     while True: 
@@ -192,8 +224,54 @@ def dequeue_tweets():
 def test_message(message):
     session['recieve_count'] = session.get('receive_count', 0) + 1
 
+def process_spark_output():
+    trend_timebucket_table = Table('trend_geo')
+    print "process_spark_output"
+    s3conn = boto.connect_s3()
+    while True:
+        # dequeue
+        notification = json.loads(spark_notifications.get_messages()[0].get_body().encode("utf-8"))
+        bucket_name = notification['Records'][0]['s3']['bucket']['name']
+        object_name = notification['Records'][0]['s3']['object']['key'] 
+        if "SUCCESS" in object_name:
+            continue
+        else:
+            # extract timebucket from object name
+            timebucket = int(object_name.split(".")[0][1:-3])
+            # read contents of S3 object
+            bucket = s3conn.get_bucket(bucket_name)
+            s3_object = bucket.get_key(object_name)
+            events = [s.strip() for s in s3_object.get_contents_as_string().split(")))") if s.strip()]
+            for event in events:
+                tmp = event.split(",ArrayBuffer")
+                hashtag = tmp[0][1:]
+                parse_for_entries = tmp[1].split("UTC 2015")
+                for entry in parse_for_entries:
+                    if "," in entry:
+                        lat = entry.split(",")[1].replace("(","").replace(")","")
+                        lng = entry.split(",")[2].replace("(","").replace(")","")
+                """
+                print "hashtag: {}".format(hashtag)
+                print "timebucket: {}".format(timebucket)
+                print "lat: {}".format(lat)
+                print "lng: {}".format(lng)
+                """
+                if (hashtag and timebucket and lat and lng):
+                    item = {'hashtag': hashtag,
+                        'timebucket': timebucket,
+                        'lat': lat,
+                        'lng': lng}
+                    try:
+                        trend_timebucket_table.put_item(data=item)
+                    except Exception as inst:
+                        print inst.args
+                    except:
+                        print "Unexpected error:", sys.exc_info()[0]
+
 def runThreads():
     # run thread to listen to Twitter Streaming API
+    spark_output_processor = threading.Thread(target=process_spark_output)
+    spark_output_processor.start()
     enqueue_worker = threading.Thread(target=enqueue_tweets)
     enqueue_worker.start()
     # TODO change to higher number later

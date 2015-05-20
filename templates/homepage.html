@@ -10,7 +10,7 @@
     <header id="top" class="header" background="../img/bg.jpg">
         <div class="text-vertical-center">
             <h1>FIND YOUR TWITTER INFLUENCERS</h1>
-            <h3>akjsdnaksdnakjdnkajsdnkjadnkjasndkjan</h3>
+            <h3>Want to find out a whole bunch of cool stuff about your tweets and world-wide tweets? <br> You've come to the right place.</h3>
             <br> {% if current_user.is_authenticated() %} 
             <form class="form-search" action="\hashtagtrend" method="post">
                 <button type="submit" name="hashtag" class="btn btn-dark btn-lg">#hashtag</button>
@@ -19,9 +19,10 @@
                 <br>
                 <br>
             </form>
-            <form class="form-search" action="\useranalytics" method="post">
+
+            <form class="form-search" action="\user" method="post">
                 <button type="submit" name="user" class="btn btn-dark btn-lg">@user</button>
-                <input type="text" name="keyword" class="input-medium search-query">
+                <input type="text" name="user_handle" class="input-medium search-query">
                 <br>
                 <br>
                 <br> 
@@ -29,7 +30,7 @@
         <br><br><br>
         <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Current Trends</a>
             {% else %}
-            <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> {% endif %}
+            <a href="{{ url_for('oauth_authorize', provider='twitter') }}" class="btn btn-dark btn-lg">Login</a> {% endif %}
         </div>
     </header>
 
