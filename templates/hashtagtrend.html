@@ -32,6 +32,9 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script>
+    var SECONDS_PER_MINUTE = 60;
+    var SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
+    var SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
     var dot;
     
     function initialize()   {
@@ -49,34 +52,111 @@
                                3: {start: 0.4*range, end: 0.6*range, color: '#FBB917'},
                                4: {start: 0.6*range, end: 0.8*range, color: '#C36241'},
                                5: {start: 0.8*range, end: range, color: '#4B0082'}}; 
+        console.log("timebucket_info");
+        console.log(timebucket_info);
         var getColor = function(tb)  {
             for (var bucket_id in timebucket_info)  {
                 var start = timebucket_info[bucket_id].start;
                 var end = timebucket_info[bucket_id].end;
-                if (tb >= oldestTimebucket+start && tb < oldestTimebucket+end)   {
-                    /*
-                    console.log("assigned ".concat(tb).concat(" to bucket id: ").concat(bucket_id));
-                    console.log(timebucket_info[bucket_id].color);
-                    */
+                if (tb >= oldestTimebucket+start && tb < oldestTimebucket+end)   { 
                     return timebucket_info[bucket_id].color;
                 }
             }
+        };
+        // make legend labels dynamically
+        var convertedTimeUnit = function(numSec, unitRequested)    {
+            var unit;
+            var count;
+            var flooredSec = Math.floor(numSec);
+            if (unitRequested === undefined)    {    
+                if (flooredSec/SECONDS_PER_DAY >= 1)    {
+                    unit = "day(s)";
+                    count = Math.floor(flooredSec/SECONDS_PER_DAY);
+                }
+                else if (flooredSec/SECONDS_PER_HOUR >= 1 && flooredSec/SECONDS_PER_HOUR < 24)  {
+                    unit = "hr(s)";
+                    count = Math.floor(flooredSec/SECONDS_PER_HOUR);
+                }
+                else if (flooredSec/SECONDS_PER_MINUTE >= 1 && flooredSec/SECONDS_PER_MINUTE < 60)  {
+                    unit = "minute(s)";
+                    count = Math.floor(flooredSec/SECONDS_PER_MINUTE);
+                }
+                else    {
+                    unit = "sec";
+                    count = flooredSec;
+                } 
+            }   //caller did not specify unit
+            else    {
+                var secPerUnit = {"sec": 1, 
+                                  "minute": SECONDS_PER_MINUTE, 
+                                  "hr": SECONDS_PER_HOUR, 
+                                  "day": SECONDS_PER_DAY};
+                unit = unitRequested.concat("(s)");
+                count = Math.floor(flooredSec/(secPerUnit[unitRequested]));
+            }
+            return count.toString().concat(" ").concat(unit);
+        };
+         
+        var tmpIconLabels = {1: {startLabel: convertedTimeUnit(timebucket_info[1].start),
+                                 endLabel: convertedTimeUnit(timebucket_info[1].end)},
+                             2: {startLabel: convertedTimeUnit(timebucket_info[2].start),
+                                 endLabel: convertedTimeUnit(timebucket_info[2].end)},
+                             3: {startLabel: convertedTimeUnit(timebucket_info[3].start),
+                                 endLabel: convertedTimeUnit(timebucket_info[3].end)},
+                             4: {startLabel: convertedTimeUnit(timebucket_info[4].start),
+                                 endLabel: convertedTimeUnit(timebucket_info[4].end)},
+                             5: {startLabel: convertedTimeUnit(timebucket_info[5].start),
+                                 endLabel: convertedTimeUnit(timebucket_info[5].end)}};
+        var iconLabels = {1:{},2:{},3:{},4:{},5:{}};
+        var units = ['sec', 'minute', 'hr', 'day'];
+        var startUnit, endUnit;
+        var startUnitIndex, endUnitIndex;
+        var lastChangedLabel;
+        // reassign label units to be more fine-grained if start, end labels are identical
+        for (var timebucket in tmpIconLabels)   {
+            var startLabel = tmpIconLabels[timebucket].startLabel;
+            var endLabel = tmpIconLabels[timebucket].endLabel; 
+            // identify currently assigned label units
+            for (var i=0; i<units.length; i++)  {
+                if (startLabel.indexOf(units[i]) > 0) {
+                    startUnit = units[i];
+                    startUnitIndex = i;
+                }
+                if (endLabel.indexOf(units[i]) > 0) {
+                    endUnit = units[i];
+                    endUnitIndex = i;
+                }
+            }
+            if (startLabel === endLabel)    {
+                // first timebucket to encounter label collision
+                if (lastChangedLabel === undefined) {
+                    iconLabels[timebucket].start = startLabel; 
+                }
+                else    {
+                    iconLabels[timebucket].start = lastChangedLabel;
+                }
+                endLabel = convertedTimeUnit(timebucket_info[timebucket].end, units[endUnitIndex-1]);
+                iconLabels[timebucket].end = endLabel;
+                lastChangedLabel = endLabel;
+                //reconvertedUnit = units[endUnitIndex-1];
+            }
+            else    {
+                iconLabels[timebucket].start = startLabel;
+                iconLabels[timebucket].end = endLabel;
+            }
         }
-        //TODO make legend labels dynamically
-        /*
-        var getIconLabel = function(timebucketId)   {
-            foo;
-        }
-        */
+        //console.log('iconLabels');
+        //console.log(iconLabels);
         var iconFilePrefix = '../static/img/';
         var iconFileExt = '.gif';
         var icons = {
-            1: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[1].color.substr(1)).concat(iconFileExt)},
-            2: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[2].color.substr(1)).concat(iconFileExt)},
-            3: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[3].color.substr(1)).concat(iconFileExt)},
-            4: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[4].color.substr(1)).concat(iconFileExt)},
-            5: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[5].color.substr(1)).concat(iconFileExt)},
-            6: {name: "TODO", icon: iconFilePrefix.concat("000000").concat(iconFileExt)}};
+            1: {name: (iconLabels[1].start).concat(" - ").concat(iconLabels[1].end), icon: iconFilePrefix.concat(timebucket_info[1].color.substr(1)).concat(iconFileExt)},
+            2: {name: (iconLabels[2].start).concat(" - ").concat(iconLabels[2].end), icon: iconFilePrefix.concat(timebucket_info[2].color.substr(1)).concat(iconFileExt)},
+            3: {name: (iconLabels[3].start).concat(" - ").concat(iconLabels[3].end), icon: iconFilePrefix.concat(timebucket_info[3].color.substr(1)).concat(iconFileExt)},
+            4: {name: (iconLabels[4].start).concat(" - ").concat(iconLabels[4].end), icon: iconFilePrefix.concat(timebucket_info[4].color.substr(1)).concat(iconFileExt)},
+            5: {name: (iconLabels[5].start).concat(" - ").concat(iconLabels[5].end), icon: iconFilePrefix.concat(timebucket_info[5].color.substr(1)).concat(iconFileExt)},
+            6: {name: "More Recent", icon: iconFilePrefix.concat("000000").concat(iconFileExt)}};
+
         var mapOptions = {
             zoom: 2,
             center: new google.maps.LatLng(37.09024, -95.712891),
@@ -92,7 +172,6 @@
             div.innerHTML = '<img src="'.concat(iconImgPath).concat('"> ').concat(iconName);
             legend.appendChild(div);
         }
-
         // plot geo coordinates of previously recorded statuses mentioning this trend
         for (var i=0;i<data.length;i++) {
             //TODO use timebucket to assign color
