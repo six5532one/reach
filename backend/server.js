@@ -124,115 +124,136 @@ var twit_resp = function (err, data, resp) {
 			//Analytics...
 			var num_retweets = 0;
 			var array_of_tags = [];
-			var array_of_locations =[];
+			var array_of_locations = [];
 			var people_user_replies_to = [];
-			var people_user_mentions =[];
-			
+			var people_user_mentions = [];
+			var links = []; 
+
 			var is_found = false;
 			var location_exists = false;
 			var responsee_exists = false;
-			
+			var link_exists = false;
+
 			for (var i = 0; i < tweets.length; i++) {
 				//Metric number 1: processing the numerator for average number of retweeters here
 				num_retweets += tweets[i].retweet_count;
-				
+
 				//Metric number 2: This one is for the tracker of hastags
-				/*if(tweets[i].entities.hashtags.length !== 0){
+				if (tweets[i].entities.hashtags.length !== 0) {
 					//We first check if it already exists in the array of tags
 					is_found = false;
-					for (var k = 0; k < array_of_tags.length; k++) {
-						if (array_of_tags[k].hashtag === tokens_in_text[j].trim()) {
-							array_of_tags[k].count += 1;
-							is_found = true;
-							break;
+					for (var m = 0; m < tweets[i].entities.hashtags.length; m++) {
+						for (var k = 0; k < array_of_tags.length; k++) {
+							if (array_of_tags[k].hashtag === tweets[i].entities.hashtags[m].trim()) {
+								array_of_tags[k].count += 1;
+								is_found = true;
+								break;
+							}
+						} //end of for..
+						if (is_found === false) {
+							//Not found we add
+							var new_obj = {'hashtag': tweets[i].entities.hashtags[m].trim(),
+								'count': 1}
+							array_of_tags.push(new_obj);
 						}
-					} //end of for..
-					if (is_found === false) {
-						//Not found we add
-						var new_obj = {'hashtag': tokens_in_text[j].trim(),
-							'count': 1 }
-						array_of_tags.push(new_obj);
 					}
-				}*/
-				
-				//Metric number 3: Where do you tweet from the most?
-				if(tweets[i].geo !== null){
-					location_exists = false;
-					for( var k = 0; k < array_of_locations.length; k++){
-						if (array_of_locations[k].location === tweets[i].geo.trim()) {
+				}
+
+					//Metric number 3: Where do you tweet from the most?
+					if (tweets[i].geo !== null) {
+						location_exists = false;
+						for (var k = 0; k < array_of_locations.length; k++) {
+							if (array_of_locations[k].location === tweets[i].geo.trim()) {
 								array_of_locations[k].count += 1;
 								location_exists = true;
 								break;
 							}
-					}//end of for
-					if(location_exists === false){
-						//Never seen this before, so we add them to array of locations
-						var new_location = { 'location': tweets[i].geo.trim(), 'count': 1}
-						array_of_locations.push(new_location);
+						}//end of for
+						if (location_exists === false) {
+							//Never seen this before, so we add them to array of locations
+							var new_location = {'location': tweets[i].geo.trim(), 'count': 1}
+							array_of_locations.push(new_location);
+						}
 					}
-				}
-				
-				//Metric number 4: Who do you reply to the most?
-				if(tweets[i].in_reply_to_screen_name !== null){
-					responsee_exists = false;
-					for( var k = 0; k < people_user_replies_to.length; k++){
-						if (people_user_replies_to[k].person === tweets[i].in_reply_to_screen_name.trim()) {
+
+					//Metric number 4: Who do you reply to the most?
+					if (tweets[i].in_reply_to_screen_name !== null) {
+						responsee_exists = false;
+						for (var k = 0; k < people_user_replies_to.length; k++) {
+							if (people_user_replies_to[k].person === tweets[i].in_reply_to_screen_name.trim()) {
 								people_user_replies_to[k].count += 1;
 								responsee_exists = true;
 								break;
 							}
-					}//end of for
-					if(responsee_exists === false){
-						//Never seen this before, so we add them to array of locations
-						var new_person = { 'person': tweets[i].in_reply_to_screen_name.trim(), 'count': 1}
-						people_user_replies_to.push(new_location);
+						}//end of for
+						if (responsee_exists === false) {
+							//Never seen this before, so we add them to array of locations
+							var new_person = {'person': tweets[i].in_reply_to_screen_name.trim(), 'count': 1}
+							people_user_replies_to.push(new_location);
+						}
 					}
-				}
-				
-				//Metric number 5: Who do you mention the most?
-				/*
-				if(tweets[i].entities.user_mentions !== 0){
-					responsee_exists = false;
-					for( var k = 0; k < people_user_mentions.length; k++){
-							for( var x = 0; x < tweets[i].entities.user_mentions.length; x++){
-								if (people_user_mentions[k].person === tweets[i].entities.user_mentions[x].trim()) {
+
+					//Metric number 5: Who do you mention the most?
+					if (tweets[i].entities.user_mentions.length !== 0) {
+						responsee_exists = false;
+						for (var m = 0; m < tweets[i].entities.hashtags.length; m++) {
+							for (var k = 0; k < people_user_mentions.length; k++) {
+								if (people_user_mentions[k].person === tweets[i].entities.user_mentions[m].trim()) {
 									people_user_mentions[k].count += 1;
 									responsee_exists = true;
 									break;
 								}
+							}	//end of for
+							if (responsee_exists === false) {
+								//Never seen this before, so we add them to array of locations
+								var new_person = {'person': tweets[i].in_reply_to_screen_name.trim(), 'count': 1}
+								people_user_replies_to.push(new_location);
 							}
-					}//end of for
-					if(responsee_exists === false){
-						//Never seen this before, so we add them to array of locations
-						var new_person = { 'person': tweets[i].in_reply_to_screen_name.trim(), 'count': 1}
-						people_user_replies_to.push(new_location);
+						}
 					}
-				}*/
-				
-				//Metric number 6: Which links do you post to the most? Or most recent links?
-				
-				//Metric number 7: Who do you retweet the most?
-				if ((tweets[i].text.indexOf("RT") > -1) && (tweets[i].text.indexOf("@") > -1)){
 					
+					//Metric number 6: Which links do you post to the most? Or most recent links?
+					if (tweets[i].entities.urls.length !== 0) {
+						link_exists = false;
+						for (var m = 0; m < tweets[i].entities.urls.length; m++) {
+							for (var k = 0; k < links.length; k++) {
+								if (links[k].url === tweets[i].entities.urls[m]) {
+									links[k].count += 1;
+									link_exists = true;
+									break;
+								}
+							}	//end of for
+							if (link_exists === false) {
+								//Never seen this before, so we add them to array of locations
+								var new_link = {'url': tweets[i].in_reply_to_screen_name.trim(), 'count': 1}
+								links.push(new_location);
+							}
+						}
+					}
+					
+					//Metric number 7: Who do you retweet the most?
+					if ((tweets[i].text.indexOf("RT") > -1) && (tweets[i].text.indexOf("@") > -1)) {
+
+					}
 				}
-				
-			}//end of large tweet cycle processing
-				
+
+				}//end of large tweet cycle processing
+
 				//sorting the responses array
-				
+
 				//sorting the locations array
-				
+
 				//sorting the "keywords" array
-				
+
 				//calculating average retweets
 				var avg_retweets = num_retweets / tweets.length;
-				
+
 				//sorting the mentions array
-				
+
 				//sorting the replies array
-			
+
 				//sorting the links array
-				
+
 				//sorting the retweeters array
 
 				resp_str = "The total count of tweets received is : " + tweets.length + "\n" + "The first element is :" + "\n" + JSON.stringify(tweets[0], null, 4);
