@@ -14,6 +14,19 @@
         margin: 0px;
         padding: 0px
     }
+    #legend {
+        background: white;
+        padding: 10px;
+        margin: 10px;
+        border: 3px solid #000;
+        font-family: Arial, sans-serif;
+    }
+    #legend img {
+        vertical-align: middle;
+    }
+    #legend div {
+        margin: 20px;
+    }
     </style>
     <script src="//maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
@@ -32,7 +45,7 @@
         console.log("newest: ".concat(newestTimebucket));
         console.log("range: ".concat(range)); 
         var timebucket_info = {1: {start: 0, end: 0.2*range, color: '#43C6DB'},
-                               2: {start: 0.2*range, end: 0.4*range, color: '#ff69b4'},
+                               2: {start: 0.2*range, end: 0.4*range, color: '#FF69B4'},
                                3: {start: 0.4*range, end: 0.6*range, color: '#FBB917'},
                                4: {start: 0.6*range, end: 0.8*range, color: '#C36241'},
                                5: {start: 0.8*range, end: range, color: '#4B0082'}}; 
@@ -49,12 +62,37 @@
                 }
             }
         }
+        //TODO make legend labels dynamically
+        /*
+        var getIconLabel = function(timebucketId)   {
+            foo;
+        }
+        */
+        var iconFilePrefix = '../static/img/';
+        var iconFileExt = '.gif';
+        var icons = {
+            1: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[1].color.substr(1)).concat(iconFileExt)},
+            2: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[2].color.substr(1)).concat(iconFileExt)},
+            3: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[3].color.substr(1)).concat(iconFileExt)},
+            4: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[4].color.substr(1)).concat(iconFileExt)},
+            5: {name: "TODO", icon: iconFilePrefix.concat(timebucket_info[5].color.substr(1)).concat(iconFileExt)},
+            6: {name: "TODO", icon: iconFilePrefix.concat("000000").concat(iconFileExt)}};
         var mapOptions = {
             zoom: 2,
             center: new google.maps.LatLng(37.09024, -95.712891),
             mapTypeId: google.maps.MapTypeId.TERRAIN
         };
         var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(document.getElementById('legend'));
+        var legend = document.getElementById('legend');
+        for (var key in icons) {
+            var iconName = icons[key].name;
+            var iconImgPath = icons[key].icon;
+            var div = document.createElement('div');
+            div.innerHTML = '<img src="'.concat(iconImgPath).concat('"> ').concat(iconName);
+            legend.appendChild(div);
+        }
+
         // plot geo coordinates of previously recorded statuses mentioning this trend
         for (var i=0;i<data.length;i++) {
             //TODO use timebucket to assign color
@@ -85,7 +123,7 @@
             console.log(lat);
             console.log(lng);
             var point = new google.maps.LatLng(lat, lng);
-             var populationOptions = {
+             var dotOptions = {
                   strokeColor: '#000000',
                   strokeOpacity: 0.8,
                   strokeWeight: 2,
@@ -96,9 +134,9 @@
                   radius: 50000
               };
               console.log('event');
-              console.log(populationOptions);
+              console.log(dotOptions);
               // Add the circle for this city to the map.
-              cityCircle = new google.maps.Circle(populationOptions); 
+              dot = new google.maps.Circle(dotOptions); 
         });
     }   // initialize
 
@@ -108,6 +146,7 @@
 
 <body>
     <div id="map-canvas"></div>
+    <div id="legend">Time Passed Since Earliest Encounter of This Hashtag</div>
 </body>
 
 </html>
