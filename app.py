@@ -3,6 +3,7 @@ import boto.sqs
 import tweepy
 import threading
 import json
+import requests
 
 from rauth import OAuth2Service
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
@@ -128,6 +129,16 @@ def user():
     print "here?"
     #getting stuff about user bc i am a STALKER~
     user_handle = request.form['user_handle']
+    # request user analytics from backend service
+    params = {"uname": user_handle, "stat": 0}
+    r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
+    if r.text == unicode("OK"):
+        params = {"uname": user_handle, "stat": 1}
+        r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
+        user_analytics = json.loads(r.text)
+    else:
+        #TODO handle case when backend service response has non-200 status
+        pass
     user_handle = user_handle.lower()
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
     auth.set_access_token(access_token, access_token_secret)
