@@ -109,9 +109,9 @@ def hashtagtrends():
         print "no data for you!!!!!!"
         return render_template('nohashtag.html', keyword=keyword)
 
-@app.route('/currenttrends')
-def currenttrends():
-    return render_template('currenttrends.html')
+@app.route('/trend_influencers')
+def trend_influencers():
+    return "TODO"
 
 @app.route('/history')
 def history():
