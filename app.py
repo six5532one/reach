@@ -124,18 +124,43 @@ def favorites():
 def signup():
     return render_template('signup.html')
 
+def turn_int(jsonobj, count):
+    print "HOOPla"
+    for entry in jsonobj:
+        entry[count] = int(entry[count])
+        print entry[count]
+        print type(entry[count])
+    return jsonobj
+
 @app.route('/user', methods = ['POST'])
 def user():
+    average = []
+    tags_json=[]
+    mentioned_json = []
+    reply_to_json = []
+    loc_json = []
     print "here?"
     #getting stuff about user bc i am a STALKER~
     user_handle = request.form['user_handle']
     # request user analytics from backend service
     params = {"uname": user_handle, "stat": 0}
     r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
-    if r.text == unicode("OK"):
+    if "OK" in r.text:
         params = {"uname": user_handle, "stat": 1}
+        time.sleep(1) #for if the user has hella data
         r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
-        user_analytics = json.loads(r.text)
+        usr = json.loads(r.text)
+        average = usr['an1'] #average number of retweets you get
+        print average
+        tags_json = usr['an2'] #list of tags with the num times you have used them s
+        count = "count"
+        tags_json = turn_int(tags_json, count)
+
+        mentioned_json = usr['an3'] #list of people you mention & how many times they are mentioned
+        reply_to_json = usr['an4'] #who does the user reply to most? list of users and #times replied
+        loc_json = usr['an5'] #where you retweet from the most
+
+
     else:
         #TODO handle case when backend service response has non-200 status
         pass
@@ -149,15 +174,20 @@ def user():
     description = user.description
     followers_count = user.followers_count
     following_count = user.friends_count
-    big_url  = short.split("_normal.jpg")
-    big_url = big_url[0]+"_400x400.jpg"
+    big_url  = short.split("_normal")
+    big_url = big_url[0]+"_400x400" + big_url[1]
     print big_url
     return render_template('user.html', 
         big_url=big_url,
         user_handle=user_handle, 
         followers_count =followers_count,
         following_count = following_count,
-        description=description)
+        description=description,
+        average = average,
+        tags_json = tags_json,
+        mentioned_json = mentioned_json,
+        reply_to_json = reply_to_json, 
+        loc_json = loc_json)
 
 @app.route('/login')
 def login():

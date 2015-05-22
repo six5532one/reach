@@ -4,6 +4,7 @@
 {%include "header.html"%}
 
 <body>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
      {% include "navbar.html" %}
     <!-- Header -->
     <header id="top" class="header">
@@ -25,10 +26,69 @@
              <h4>user: {{user_handle}}<br>
                 Followers: {{followers_count}} <br>
                 Following: {{following_count}}</h4>
-                <br><br><br><br><br>
-                <br><br><br>
+                
 
-                <h1>Users who have influenced you</h1>
+                <h1>Pie Chart of #yourhashtags: </h1>
+
+                <script type="text/javascript">
+$(function () {
+    $('#container').highcharts({
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: 'Number of times youve used these #hashtags'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {  
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Hashtags',
+            data: [
+
+                console.log("here?")
+                {% for entry in tags_json %}
+
+                {% if loop.last %}
+                 ['{{entry["hashtag"]}}', {{entry["count"]}}]
+                {% endif %}
+                
+                console.log(typeof {{entry["count"]}})
+                ['{{entry["hashtag"]}}', {{entry["count"]}}],
+
+                
+                {% endfor %}
+            ]
+        }]
+    });
+}); 
+
+
+
+
+        </script>
+
+      <script src="/static/js/highcharts.js"></script>
+<script src="/static/js/modules/exporting.js"></script>
+<br>
+<div id="container" style="min-width: 310px; height: 400px; max-width: 600px; margin: 0 auto; opacity: .7"></div>
+
 
                 <h1>Who You Have Influenced: </h1>
 
