@@ -112,29 +112,16 @@ def hashtagtrends():
         return render_template('nohashtag.html', keyword=keyword)
 
 def extract_info(handle, num):
-    print "1"
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
-    print "1"
     auth.set_access_token(access_token, access_token_secret)
-    print "1"
     api = tweepy.API(auth)
-    print "1"
-    print api
     user = api.get_user(handle)
-    print user
-
-    print "1"
-    print user
     short = user.profile_image_url
-    print short
     description = user.description
     followers_count = user.followers_count
     following_count = user.friends_count
     big_url  = short.split("_normal")
-
     big_url = big_url[0]+"_400x400" + big_url[1]
-    print "bigurk:"
-    print big_url
     return {"user_handle": handle, "big_url": big_url, "num": num}
 
 
@@ -146,10 +133,12 @@ def trend_influencers():
     keyword = request.form['keyword']
     keyword = keyword.lower()
     print keyword
-    user1 = extract_info("mathisonian", 54)
-    user2 = extract_info("banunu_dog", 14)
-    user3 = extract_info("maurajbg", 20)
-
+    trend_influencer_table = Table('trend_influencer')
+    candidates = [(res["user_handle"], res["count"]) for res in trend_influencer_table.query_2(hashtag__eq=keyword)]
+    candidates.sort(key = lambda x: x[1], reverse=True)
+    user1 = extract_info(candidates[0][0], int(candidates[0][1]))
+    user2 = extract_info(candidates[1][0], int(candidates[1][1]))
+    user3 = extract_info(candidates[2][0], int(candidates[2][1]))
     return render_template("trend_influencers.html", keyword=keyword, user1=user1, user2=user2, user3=user3)
 
 @app.route('/history')
@@ -415,25 +404,23 @@ def process_spark_influencers():
                             key_data, count_data = i.split(')')[:-1]
                             count = int(count_data[1:])
                             userhandle= key_data.split(',')[-1]
-                            tag=key_data.split(',')[0][2:]
+                            tag=key_data.split(',')[0][2:].lower()
                             db_results = list(trend_influencer_table.query_2(hashtag__eq=tag, user_handle__eq=userhandle))
                             try:
                                 if len(db_results) == 0:
-                                    print "new influencer record"
                                     item = {"hashtag": tag, "user_handle": userhandle, "count": count}
                                     trend_influencer_table.put_item(data=item)
                                 else:
                                     existing = trend_influencer_table.get_item(hashtag=tag, user_handle=userhandle)
-                                    print "existing influence record"
-                                    print existing
                                     old_count = existing["count"]
                                     existing["count"] = old_count + count
                                     existing.save(overwrite=True)
                             except:
                                 raise
                         except:
-                            print "exception......."
-                            print i
+                            pass
+                            #print "exception......."
+                            #print i
                 except:
                     raise
                     #print "exception: object name: {}".format(object_name)
