@@ -109,7 +109,7 @@ def hashtagtrends():
         print "no data for you!!!!!!"
         return render_template('nohashtag.html', keyword=keyword)
 
-@app.route('/trend_influencers')
+@app.route('/trend_influencers', methods = ['POST'])
 def trend_influencers():
     return "TODO"
 
