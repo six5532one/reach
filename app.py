@@ -305,6 +305,7 @@ def test_message(message):
     session['recieve_count'] = session.get('receive_count', 0) + 1
 
 def process_spark_geo():
+    print "proess spark geo......"
     trend_timebucket_table = Table('trend_geo')
     s3conn = boto.connect_s3()
     while True:
@@ -357,6 +358,7 @@ def process_spark_geo():
             time.sleep(300)
 
 def process_spark_influencers():
+    print "process_spark_influencers......."
     trend_influencer_table = Table('trend_influencer')
     s3conn = boto.connect_s3()
     while True:
@@ -381,17 +383,29 @@ def process_spark_influencers():
                             count = int(count_data[1:])
                             userhandle= key_data.split(',')[-1]
                             tag=key_data.split(',')[0][2:]
-                            db_results = list(trend_influencer_table.query_2(hashtag__eq=hashtag, limit=1))
-                            if len(db_results) == 0:
-                                item = {"hashtag": tag, "user_handle": userhandle, "count": count}
-                                #TODO insert in db
-                            #print tag, userhandle, count
+                            db_results = list(trend_influencer_table.query_2(hashtag__eq=tag, user_handle__eq=userhandle))
+                            try:
+                                if len(db_results) == 0:
+                                    print "new influencer record"
+                                    item = {"hashtag": tag, "user_handle": userhandle, "count": count}
+                                    trend_influencer_table.put_item(data=item)
+                                else:
+                                    existing = trend_influencer_table.get_item(hashtag=tag, user_handle=userhandle)
+                                    print "existing influence record"
+                                    print existing
+                                    old_count = existing["count"]
+                                    existing["count"] = old_count + count
+                                    existing.save(overwrite=True)
+                            except:
+                                raise
                         except:
                             print "exception......."
                             print i
                 except:
-                    print "exception: object name: {}".format(object_name)
-
+                    raise
+                    #print "exception: object name: {}".format(object_name)
+        else:
+            time.sleep(300)
 
 def runThreads():
     # run thread to listen to Twitter Streaming API
