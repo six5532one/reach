@@ -272,41 +272,44 @@ def process_spark_output():
             notification = json.loads(msg.get_body().encode("utf-8"))
             spark_notifications.delete_message(msg)
             bucket_name = notification['Records'][0]['s3']['bucket']['name']
-            object_name = notification['Records'][0]['s3']['object']['key'] 
+            object_name = notification['Records'][0]['s3']['object']['key']  
             if "SUCCESS" in object_name:
                 continue
             else:
                 # extract timebucket from object name
                 timebucket = int(object_name.split(".")[0][1:-3])
                 # read contents of S3 object
-                bucket = s3conn.get_bucket(bucket_name)
-                s3_object = bucket.get_key(object_name)
-                events = [s.strip() for s in s3_object.get_contents_as_string().split(")))") if s.strip()]
-                for event in events:
-                    tmp = event.split(",ArrayBuffer")
-                    hashtag = tmp[0][1:].lower()
-                    parse_for_entries = tmp[1].split("UTC 2015")
-                    for entry in parse_for_entries:
-                        if "," in entry:
-                            lat = entry.split(",")[1].replace("(","").replace(")","")
-                            lng = entry.split(",")[2].replace("(","").replace(")","")
-                    """
-                    print "hashtag: {}".format(hashtag)
-                    print "timebucket: {}".format(timebucket)
-                    print "lat: {}".format(lat)
-                    print "lng: {}".format(lng)
-                    """
-                    if (hashtag and timebucket and lat and lng):
-                        item = {'hashtag': hashtag,
-                            'timebucket': timebucket,
-                            'lat': lat,
-                            'lng': lng}
-                        try:
-                            trend_timebucket_table.put_item(data=item)
-                        except Exception as inst:
-                            print inst.args
-                        except:
-                            print "Unexpected error:", sys.exc_info()[0]
+                try:
+                    bucket = s3conn.get_bucket(bucket_name)
+                    s3_object = bucket.get_key(object_name)
+                    events = [s.strip() for s in s3_object.get_contents_as_string().split(")))") if s.strip()]
+                    for event in events:
+                        tmp = event.split(",ArrayBuffer")
+                        hashtag = tmp[0][1:].lower()
+                        parse_for_entries = tmp[1].split("UTC 2015")
+                        for entry in parse_for_entries:
+                            if "," in entry:
+                                lat = entry.split(",")[1].replace("(","").replace(")","")
+                                lng = entry.split(",")[2].replace("(","").replace(")","")
+                        """
+                        print "hashtag: {}".format(hashtag)
+                        print "timebucket: {}".format(timebucket)
+                        print "lat: {}".format(lat)
+                        print "lng: {}".format(lng)
+                        """
+                        if (hashtag and timebucket and lat and lng):
+                            item = {'hashtag': hashtag,
+                                'timebucket': timebucket,
+                                'lat': lat,
+                                'lng': lng}
+                            try:
+                                trend_timebucket_table.put_item(data=item)
+                            except Exception as inst:
+                                print inst.args
+                            except:
+                                print "Unexpected error:", sys.exc_info()[0]
+                except:
+                    print "exception: object name: {}".format(object_name)
         else:
             time.sleep(300)
 
