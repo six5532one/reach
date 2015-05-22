@@ -97,6 +97,7 @@ def load_user(id):
 
 @app.route('/hashtagtrend', methods = ['POST'])
 def hashtagtrends():
+
     keyword = request.form['keyword']
     keyword = keyword.lower()
     trend_timebucket_table = Table('trend_geo')
@@ -110,6 +111,33 @@ def hashtagtrends():
         print "no data for you!!!!!!"
         return render_template('nohashtag.html', keyword=keyword)
 
+def extract_info(handle, num):
+    print "1"
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret) 
+    print "1"
+    auth.set_access_token(access_token, access_token_secret)
+    print "1"
+    api = tweepy.API(auth)
+    print "1"
+    print api
+    user = api.get_user(handle)
+    print user
+
+    print "1"
+    print user
+    short = user.profile_image_url
+    print short
+    description = user.description
+    followers_count = user.followers_count
+    following_count = user.friends_count
+    big_url  = short.split("_normal")
+
+    big_url = big_url[0]+"_400x400" + big_url[1]
+    print "bigurk:"
+    print big_url
+    return {"user_handle": handle, "big_url": big_url, "num": num}
+
+
 @app.route('/trend_influencers', methods = ['POST'])
 def trend_influencers():
     """will return this to template:
@@ -117,7 +145,12 @@ def trend_influencers():
     """
     keyword = request.form['keyword']
     keyword = keyword.lower()
-    return "TODO"
+    print keyword
+    user1 = extract_info("mathisonian", 54)
+    user2 = extract_info("banunu_dog", 14)
+    user3 = extract_info("maurajbg", 20)
+
+    return render_template("trend_influencers.html", keyword=keyword, user1=user1, user2=user2, user3=user3)
 
 @app.route('/history')
 def history():
