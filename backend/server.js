@@ -19,12 +19,12 @@ var twit_client = new twitter({'consumer_key': process.env.TWITTER_CONSUMER_KEY,
 	'consumer_secret': process.env.TWITTER_CONSUMER_SECRET,
 	'access_token': process.env.TWITTER_ACCESS_TOKEN_KEY,
 	'access_token_secret': process.env.TWITTER_ACCESS_TOKEN_SECRET});
-var resp_str = "";
+//var resp_str = "";
 var tweets = [];
 var user_name;		//This will be kept as a null string while we are waiting for the first request, but will maintain the value till next request
 var resp_ready = false;
 var data_rcvd_count = 0;
-var debug_str = "";
+//var debug_str = "";
 var resp_object = {
 	'an1': null,
 	'an2': null,
@@ -75,10 +75,10 @@ var http_server = http.createServer(function (request, response) {
 				}
 				//Since at this stage resp_ready is set, we return the resp_str
 				response.writeHead(200, {'Content-Type': 'application/json'});
-				response.end(resp_object);
+				response.end(JSON.stringify(resp_object));
 				//We now clear the fields of the previous user...
 				resp_ready = false;
-				resp_str = "";
+				//resp_str = "";
 				tweets = [];
 				data_rcvd_count = 0;
 				user_name = "";
@@ -91,10 +91,15 @@ var http_server = http.createServer(function (request, response) {
 			} else if (stat_val === "-1") {
 				//This is an abort request, so we re initialize all arrays and wait for next request
 				resp_ready = false;
-				resp_str = "";
+				//resp_str = "";
 				tweets = [];
 				data_rcvd_count = 0;
 				user_name = "";
+				resp_object.an1 = null;
+				resp_object.an2 = null;
+				resp_object.an3 = null;
+				resp_object.an4 = null;
+				resp_object.an5 = null;
 				response.writeHead(200, {'Content-Type': 'text/plain'});
 				response.end("Stats compilation aborted...");
 			}
@@ -246,9 +251,10 @@ var twit_resp = function (err, data, resp) {
 			resp_object.an3 = people_user_mentions;
 			resp_object.an4 = people_user_replies_to;
 			resp_object.an5 = array_of_locations;
-			//resp_str = "First object :\n"+JSON.stringify(tweets[0],null,4)+"\nSecond object :\n"+JSON.stringify(tweets[1],null,4)+"\n";//Third object :\n"+JSON.stringify(tweets[2],null,4)+"\n";
+			/*resp_str = "First object :\n"+JSON.stringify(tweets[0],null,4)+"\nSecond object :\n"+JSON.stringify(tweets[1],null,4)+"\n";//Third object :\n"+JSON.stringify(tweets[2],null,4)+"\n";
 			//resp_str = "Debug str :\n"+
 			resp_str = JSON.stringify(resp_object);//+"\n"+debug_str;
+			*/
 			resp_ready = true;
 
 		}
