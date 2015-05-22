@@ -36,7 +36,7 @@ val twitter_auth = new TwitterFactory(auth.config)
 val a = new twitter4j.auth.OAuthAuthorization(auth.config)
 val atwitter : Option[twitter4j.auth.Authorization] =  Some(twitter_auth.getInstance(a).getAuthorization())
 
-val ssc = new StreamingContext(sc, Seconds(120))
+val ssc = new StreamingContext(sc, Seconds(1))
 
 // Create a input stream that returns tweets received from Twitter.
 // filter for tweets that have at least one hashtag
