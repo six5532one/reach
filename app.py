@@ -30,7 +30,8 @@ aws_secret = content[5].rstrip()
 
 conn = boto.sqs.connect_to_region("us-east-1", aws_access_key_id=aws_access, aws_secret_access_key=aws_secret)
 reachqueue = conn.create_queue('Reachv1')
-spark_notifications = conn.get_queue('spark_output_events')
+geo_notifications = conn.get_queue('spark_output_events')
+influence_notifications = conn.get_queue('trend_influencers')
 
 app.config['SECRET_KEY'] = 'top secret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -111,6 +112,11 @@ def hashtagtrends():
 
 @app.route('/trend_influencers', methods = ['POST'])
 def trend_influencers():
+    """will return this to template:
+    data = [{"username1": 55}, {"username2": 45}, {"username3": 35}]
+    """
+    keyword = request.form['keyword']
+    keyword = keyword.lower()
     return "TODO"
 
 @app.route('/history')
@@ -260,17 +266,16 @@ def dequeue_tweets():
 def test_message(message):
     session['recieve_count'] = session.get('receive_count', 0) + 1
 
-def process_spark_output():
+def process_spark_geo():
     trend_timebucket_table = Table('trend_geo')
-    print "process_spark_output"
     s3conn = boto.connect_s3()
     while True:
         # dequeue
-        fetched_messages = spark_notifications.get_messages()
+        fetched_messages = geo_notifications.get_messages()
         if len(fetched_messages) > 0:
             msg = fetched_messages[0]
             notification = json.loads(msg.get_body().encode("utf-8"))
-            spark_notifications.delete_message(msg)
+            geo_notifications.delete_message(msg)
             bucket_name = notification['Records'][0]['s3']['bucket']['name']
             object_name = notification['Records'][0]['s3']['object']['key']  
             if "SUCCESS" in object_name:
@@ -313,10 +318,49 @@ def process_spark_output():
         else:
             time.sleep(300)
 
+def process_spark_influencers():
+    trend_influencer_table = Table('trend_influencer')
+    s3conn = boto.connect_s3()
+    while True:
+        # dequeue
+        fetched_messages = influence_notifications.get_messages()
+        if len(fetched_messages) > 0:
+            msg = fetched_messages[0]
+            notification = json.loads(msg.get_body().encode("utf-8"))
+            influence_notifications.delete_message(msg)
+            bucket_name = notification['Records'][0]['s3']['bucket']['name']
+            object_name = notification['Records'][0]['s3']['object']['key']
+            if "SUCCESS" in object_name:
+                continue
+            else:
+                try:
+                    bucket = s3conn.get_bucket(bucket_name)
+                    s3_object = bucket.get_key(object_name)
+                    entries = s3_object.get_contents_as_string().strip().split('\n')
+                    for i in entries:
+                        try:
+                            key_data, count_data = i.split(')')[:-1]
+                            count = int(count_data[1:])
+                            userhandle= key_data.split(',')[-1]
+                            tag=key_data.split(',')[0][2:]
+                            db_results = list(trend_influencer_table.query_2(hashtag__eq=hashtag, limit=1))
+                            if len(db_results) == 0:
+                                item = {"hashtag": tag, "user_handle": userhandle, "count": count}
+                                #TODO insert in db
+                            #print tag, userhandle, count
+                        except:
+                            print "exception......."
+                            print i
+                except:
+                    print "exception: object name: {}".format(object_name)
+
+
 def runThreads():
     # run thread to listen to Twitter Streaming API
-    spark_output_processor = threading.Thread(target=process_spark_output)
-    spark_output_processor.start()
+    spark_geo_processor = threading.Thread(target=process_spark_geo)
+    spark_geo_processor.start()
+    spark_influencer_processor = threading.Thread(target=process_spark_influencers)
+    spark_influencer_processor.start()
     enqueue_worker = threading.Thread(target=enqueue_tweets)
     enqueue_worker.start()
     num_sqs_consumers = 6
