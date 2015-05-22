@@ -23,21 +23,11 @@
     -moz-border-radius: 150px;
 }
             </style>
-       
-                <img class="circular"  src='{{user1["big_url"]}}' height="200" width="200">
-                <h4>user: {{user1["user_handle"]}}<br>
-                Number of Tweets about <b>{{keyword}}</b> That Were Retweeted: {{user1["num"]}} </h4>
-
-                        <img class="circular" float="right" src='{{user2["big_url"]}}' height="200" width="200">
-                        <h4>user: {{user2["user_handle"]}}<br>
-                Number of Tweets about <b>{{keyword}}</b> That Were Retweeted: {{user2["num"]}} </h4>
-
-  <img class="circular" src='{{user3["big_url"]}}' height="200" width="200">
-                        <h4>user: {{user3["user_handle"]}}<br>
-                Number of Tweets about <b>{{keyword}}</b> That Were Retweeted: {{user3["num"]}} </h4>
-
-
-
+       {% for influencer in data %}
+                <img class="circular"  src='{{influencer["big_url"]}}' height="200" width="200">
+                <h4>User: {{influencer["user_handle"]}}<br>
+                Number of Tweets about <b>{{keyword}}</b> That Were Retweeted: {{influencer["num"]}} </h4>
+    {% endfor %}
     </header>
 
 

@@ -136,10 +136,16 @@ def trend_influencers():
     trend_influencer_table = Table('trend_influencer')
     candidates = [(res["user_handle"], res["count"]) for res in trend_influencer_table.query_2(hashtag__eq=keyword)]
     candidates.sort(key = lambda x: x[1], reverse=True)
+    if len(candidates) >=3:
+        data = [extract_info(cand[0], int(cand[1])) for cand in candidates[:3]]
+    else:
+        data = [extract_info(cand[0], int(cand[1])) for cand in candidates]
+    """
     user1 = extract_info(candidates[0][0], int(candidates[0][1]))
     user2 = extract_info(candidates[1][0], int(candidates[1][1]))
     user3 = extract_info(candidates[2][0], int(candidates[2][1]))
-    return render_template("trend_influencers.html", keyword=keyword, user1=user1, user2=user2, user3=user3)
+    """
+    return render_template("trend_influencers.html", keyword=keyword, data=data)
 
 @app.route('/history')
 def history():
