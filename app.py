@@ -125,6 +125,34 @@ def favorites():
 def signup():
     return render_template('signup.html')
 
+def getTopLength(jlist, length):
+    print "here?"
+    print len(jlist)
+    if len(jlist) > length:
+        print "greater than 20"
+        reallist = []
+        templist = []
+        print jlist
+        for entry in jlist:
+            templist.append(entry["count"])  
+        templist.sort(reverse=True)
+        templist = templist[:length]
+        print templist
+
+        for c in templist:
+            for entry in jlist:
+                print "Does :  "+ str(entry["count"]) + " = " + str(c)
+                if entry["count"] == c and entry not in reallist:
+                    reallist.append(entry)
+                    print entry 
+                    break
+        print reallist
+        return reallist
+    else:
+        print "less than 20"
+        return jlist
+
+
 @app.route('/user', methods = ['POST'])
 def user():
     average = []
@@ -132,28 +160,38 @@ def user():
     mentioned_json = []
     reply_to_json = []
     loc_json = []
-    print "here?"
+    
     #getting stuff about user bc i am a STALKER~
     user_handle = request.form['user_handle']
-    print "1"
+    
     # request user analytics from backend service
     params = {"uname": user_handle, "stat": 0}
     r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
     if "OK" in r.text:
-        print "2"
+       
         params = {"uname": user_handle, "stat": 1}
-        time.sleep(4) #for if the user has hella data
-        print "3"
+        time.sleep(2) #for if the user has hella data
+       
         r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
         print r.status_code
         usr = json.loads(r.text)
         print "4"
         average = usr['an1'] #average number of retweets you get
-        print average
         tags_json = usr['an2'] #list of tags with the num times you have used them s
+        tags_json = getTopLength(tags_json, 15)
+        
         mentioned_json = usr['an3'] #list of people you mention & how many times they are mentioned
+        mentioned_json = getTopLength(mentioned_json, 15)
+        
         reply_to_json = usr['an4'] #who does the user reply to most? list of users and #times replied
+        reply_to_json = getTopLength(reply_to_json, 15)
+       
         loc_json = usr['an5'] #where you retweet from the most
+        print loc_json
+        loc_json = getTopLength(loc_json, 15)
+        print len(loc_json)
+        print loc_json
+        print ")________________"
 
 
     else:
