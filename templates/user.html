@@ -61,15 +61,11 @@ $(function () {
             type: 'pie',
             name: 'Hashtags',
             data: [
-
-                console.log("here?")
                 {% for entry in tags_json %}
 
                 {% if loop.last %}
                  ['{{entry["hashtag"]}}', {{entry["count"]}}]
                 {% endif %}
-                
-                console.log(typeof {{entry["count"]}})
                 ['{{entry["hashtag"]}}', {{entry["count"]}}],
 
                 
