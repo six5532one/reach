@@ -10,4 +10,5 @@ First, the user/front-end sends a request with a username and a status number = 
 
 There are five metrics which have been implemented in terms of user analytics. They are: a float value of the requested user's spread/virality factor, all of the user's hashtags and their frequencies (in order to construct an overall pie-chart of how the data looks like), the top five people that the user directly mentions most in their tweets, the top five people that the user replies to most in their tweets  and the top five most popular locations from where a user has tweeted. This list is not comprehensive and obviously, future versions may have even smarter versions of them. These metrics are calculated mostly by looping through all 600 tweets and adding only unknown members to a globally maintained list of properties we want to track. 
 
-#####What is returned to the front end: A JSON object containing the required fields in a format previously determined by the front-end writer (Jessica Fan + Emily Chen) and me. 
+#####What is returned to the front end: 
+A JSON object containing the required fields in a format previously determined by the front-end writer (Jessica Fan + Emily Chen) and me. 
