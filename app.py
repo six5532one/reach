@@ -16,7 +16,6 @@ from boto.sqs.message import Message
 from boto.dynamodb2.table import Table
 
 app = Flask(__name__)
-
 socketio = SocketIO(app)
 db = SQLAlchemy(app)
 
@@ -124,14 +123,6 @@ def favorites():
 def signup():
     return render_template('signup.html')
 
-def turn_int(jsonobj, count):
-    print "HOOPla"
-    for entry in jsonobj:
-        entry[count] = int(entry[count])
-        print entry[count]
-        print type(entry[count])
-    return jsonobj
-
 @app.route('/user', methods = ['POST'])
 def user():
     average = []
@@ -142,20 +133,22 @@ def user():
     print "here?"
     #getting stuff about user bc i am a STALKER~
     user_handle = request.form['user_handle']
+    print "1"
     # request user analytics from backend service
     params = {"uname": user_handle, "stat": 0}
     r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
     if "OK" in r.text:
+        print "2"
         params = {"uname": user_handle, "stat": 1}
         time.sleep(1) #for if the user has hella data
+        print "3"
         r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
+        print r.status_code
         usr = json.loads(r.text)
+        print "4"
         average = usr['an1'] #average number of retweets you get
         print average
         tags_json = usr['an2'] #list of tags with the num times you have used them s
-        count = "count"
-        tags_json = turn_int(tags_json, count)
-
         mentioned_json = usr['an3'] #list of people you mention & how many times they are mentioned
         reply_to_json = usr['an4'] #who does the user reply to most? list of users and #times replied
         loc_json = usr['an5'] #where you retweet from the most
