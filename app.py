@@ -140,7 +140,7 @@ def user():
     if "OK" in r.text:
         print "2"
         params = {"uname": user_handle, "stat": 1}
-        time.sleep(3) #for if the user has hella data
+        time.sleep(4) #for if the user has hella data
         print "3"
         r = requests.get('http://reach-backend.elasticbeanstalk.com:2678/data', params=params)
         print r.status_code
