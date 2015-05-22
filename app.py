@@ -100,12 +100,14 @@ def hashtagtrends():
     keyword = keyword.lower()
     trend_timebucket_table = Table('trend_geo')
     all_results = trend_timebucket_table.query_2(hashtag__eq=keyword)
-    data = [{"timebucket":int(res["timebucket"]), "lat":float(res["lat"]), "lng":float(res["lng"])} for res in list(all_results)]
-    print data
-    oldest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, limit=1))[0]['timebucket'])
-    newest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, reverse=True, limit=1))[0]['timebucket'])
-    return render_template('hashtagtrend.html', keyword=keyword, data=json.dumps(data), oldest_timebucket=oldest_timebucket, newest_timebucket=newest_timebucket)
-
+    data = [{"timebucket":int(res["timebucket"]), "lat":float(res["lat"]), "lng":float(res["lng"])} for res in list(all_results)] 
+    if data:
+        oldest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, limit=1))[0]['timebucket'])
+        newest_timebucket = int(list(trend_timebucket_table.query_2(hashtag__eq=keyword, reverse=True, limit=1))[0]['timebucket'])
+        return render_template('hashtagtrend.html', keyword=keyword, data=json.dumps(data), oldest_timebucket=oldest_timebucket, newest_timebucket=newest_timebucket)
+    else:
+        print "no data for you!!!!!!"
+        return render_template('nohashtag.html', keyword=keyword)
 
 @app.route('/currenttrends')
 def currenttrends():
