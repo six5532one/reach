@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+{%include "header.html"%}
+
+<body>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    {% include "navbar.html" %}
+    <!-- Header -->
+    <header id="top" class="header">
+
+        <div class="text-vertical-center">
+            <h1>Keyword: {{keyword}}</h1>
+            <br>
+            <br>
+            <style type="text/css">
+.circular {
+    width: 200px;
+    height: 200px;
+    border-radius: 150px;
+    -webkit-border-radius: 150px;
+    -moz-border-radius: 150px;
+}
+            </style>
+       
+                <img class="circular"  src='{{user1["big_url"]}}' height="200" width="200">
+                <h4>user: {{user1["user_handle"]}}<br>
+                Tweets: {{user1["num"]}} </h4>
+
+                        <img class="circular" float="right" src='{{user2["big_url"]}}' height="200" width="200">
+                        <h4>user: {{user2["user_handle"]}}<br>
+                Tweets: {{user2["num"]}} </h4>
+
+  <img class="circular" src='{{user3["big_url"]}}' height="200" width="200">
+                        <h4>user: {{user3["user_handle"]}}<br>
+                Tweets: {{user3["num"]}} </h4>
+
+
+
+    </header>
+
+
+
+
+
+    <section id="about" class="about">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2>About us</h2>
+                    <p>Jessica Fan
+                        <br> Piyali Mukherjee
+                        <br> Emily Chen
+                    </p>
+                    <p class="lead">Visit our GITHUB: <a target="_blank" href="https://github.com/six5532one/reach">REACH PROJECT ♥ ♥</a>.</p>
+                </div>
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container -->
+    </section>
+
+</body>
+
+</html>
