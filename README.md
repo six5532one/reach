@@ -44,4 +44,4 @@ A [second Spark Streaming job](https://github.com/six5532one/reach/blob/master/t
 The background threads that process SQS notifications fetch the newest Spark output from S3, parse the S3 contents, and write them to Dynamo DB. When a user requests either the [hashtag geography trends](https://github.com/six5532one/reach/blob/master/app.py#L99) or [hashtag influencers](https://github.com/six5532one/reach/blob/master/app.py#L129) endpoints, the application server queries the DynamoDB instance, aggregates the result set in a meaningful way, and sends the result to the front end.
 
 ####Data Visualization
-TODO
+User analytics for visualized using the Highcharts JS charting framework. We use the Google Maps API to display geographic and temporal trends in hashtag usage. We also use the Python Flask-SocketIO library to implement the websockets protocol, enabling visualization of real-time updates of the hashtag geography trends.
