@@ -30,5 +30,11 @@ Five user analytics metrics are returned in JSON format:
 * the most popular locations from where this user has tweeted
 
 ####Data Processing Pipeline
-TODO
+We run two Spark Streaming jobs to continuously process all Twitter Statuses from the Twitter Streaming API. Each runs on a Spark cluster consisting of 8 Amazon EC2 instances with 218GB of memory.
 
+[One Spark Streaming job](https://github.com/six5532one/reach/blob/master/trends_geo.scala) filters the streaming data source for Twitter Statuses that include geo coordinates and at least one hashtag, then groups timestamps and geo coordinates for each hashtag. It outputs results to Amazon S3 as S3 objects named by their timestamp. We add a notification for "PUT" events in the S3 bucket containing these objects, adding events to an SQS queue. Our application server runs a thread pool that delegates one worker to read these SQS messages to access the newest Spark Streaming output in S3.
+
+A [second Spark Streaming job](https://github.com/six5532one/reach/blob/master/trend_influencers.scala) TODO.
+
+####Data Visualization
+TODO
