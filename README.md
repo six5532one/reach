@@ -15,7 +15,7 @@ Our web application uses the Python Flask framework to process user requests for
 To allow our web application to serve geographic and temporal patterns of all trending topics on Twitter and provide information about the Twitter users who are most influential for each topic, we run two Spark Streaming jobs that continuously process data from the Twitter Stream, leveraging Databricks Cloud to launch Spark clusters via Amazon Web Services.
 
 ####User Analytics Component
-This [Node.js server](https://github.com/six5532one/reach/tree/master/backend) communicates with the application server to processes requests for user analytics data. 
+A [Node.js server](https://github.com/six5532one/reach/tree/master/backend) deployed via Amazon Elastic Beanstalk communicates with the application server to processes requests for user analytics data. 
 
 ##### Implementation: 
 First, the user/front-end sends a request with a username and a status number = 0. The node server then fetches data from the Twitter API using that username and behind processing for 6 metrics. During the processing time, if the user sends a request of the same username with status=1, then the server will respond with "Not enough time to process data". During this time if the user resends another username with status=0, the analytics processing for the previous username is aborted. This part of the code currently processes 600 tweets. 
