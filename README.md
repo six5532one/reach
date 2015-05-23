@@ -30,11 +30,18 @@ Five user analytics metrics are returned in JSON format:
 * the most popular locations from where this user has tweeted
 
 ####Data Processing Pipeline
+#####Twitter Streaming API => Apache Spark Streaming
 We run two Spark Streaming jobs to continuously process all Twitter Statuses from the Twitter Streaming API. Each runs on a Spark cluster consisting of 8 Amazon EC2 instances with 218GB of memory.
 
-[One Spark Streaming job](https://github.com/six5532one/reach/blob/master/trends_geo.scala) filters the streaming data source for Twitter Statuses that include geo coordinates and at least one hashtag, then groups timestamps and geo coordinates for each hashtag. It outputs results to Amazon S3 as S3 objects named by their timestamp. We add a notification for "PUT" events in the S3 bucket containing these objects, adding events to an SQS queue. Our application server runs a thread pool that delegates one worker to read these SQS messages to access the newest Spark Streaming output in S3.
+[One Spark Streaming job](https://github.com/six5532one/reach/blob/master/trends_geo.scala) tracks the geo coordinates for each Twitter hashtag, each time the hashtag is used. It filters the streaming data source for Twitter Statuses that include geo coordinates and at least one hashtag, then groups timestamps and geo coordinates for each hashtag. By design, Spark Streaming bins data from a streaming source into batches, such that the data streamed in each time interval is used to create a Resilient Distributed Dataset (RDD). Hence, the computations specified in this job are repeated on an RDD constructed in every time interval and results written to Amazon S3 are named with a timestamp denoting the time interval at which that RDD was constructed.
 
-A [second Spark Streaming job](https://github.com/six5532one/reach/blob/master/trend_influencers.scala) TODO.
+#####Apache Spark Streaming => Application Server
+We add a notification for "PUT" events in the S3 bucket containing these objects, adding events to an SQS queue. Our application server runs a thread pool that delegates one worker to read SQS messages for this notification type, to access the newest Spark Streaming output for this particular job.
+
+A [second Spark Streaming job](https://github.com/six5532one/reach/blob/master/trend_influencers.scala) tracks the number of users who retweet each hashtag mentioned by a particular Twitter user. It filters the streaming data source for Statuses that are retweets and contain at least one hashtag, gets the Twitter user who posted the Status that was retweeted, and attributes a tally for the grouping of that hashtag and Twitter user. These tallies are aggregated into counts and the counts for each batch are written to another S3 bucket that also  triggers SQS notifications for "PUT" events. The application server delegates a separate thread for handling notifications for new output for this Spark job.
+
+#####Application Server => User Interface
+The background threads that process SQS notifications fetch the newest Spark output from S3, parse the S3 contents, and write them to Dynamo DB. When a user requests either the [hashtag geography trends](https://github.com/six5532one/reach/blob/master/app.py#L99) or [hashtag influencers](https://github.com/six5532one/reach/blob/master/app.py#L129) endpoints, the application server queries the DynamoDB instance, aggregates the result set in a meaningful way, and sends the result to the front end.
 
 ####Data Visualization
 TODO
