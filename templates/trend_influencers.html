@@ -26,7 +26,7 @@
        {% for influencer in data %}
                 <img class="circular"  src='{{influencer["big_url"]}}' height="200" width="200">
                 <h4>User: {{influencer["user_handle"]}}<br>
-                Number of Tweets about <b>{{keyword}}</b> That Were Retweeted: {{influencer["num"]}} </h4>
+                Number of People Who Retweeted Their Tweets about <b>{{keyword}}</b>: {{influencer["num"]}} </h4>
     {% endfor %}
     </header>
 
