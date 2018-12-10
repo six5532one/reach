@@ -2,6 +2,10 @@
 
 REACH is a comprehensive analytics suite currently serving Twitter users.
 
+Demo
+---------
+https://www.youtube.com/watch?v=HLuOTzdFV2Q
+
 Features
 ---------
 * User analytics
